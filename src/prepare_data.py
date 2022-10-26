@@ -4,11 +4,17 @@ from pathlib import Path
 from monai.transforms import (
     Compose,
     LoadImaged,
-    AddChanneld,
-    Resized,
+    EnsureChannelFirstd,
     ScaleIntensityRanged,
+    Resized,
 )
-from transforms import FindCentroid, GetFixedROISize, CropToROI, Pad, Save
+from transforms import (
+    FindCentroid,
+    GetFixedROISize,
+    CropToROI,
+    Pad,
+    Save,
+)
 
 
 def extract_3d_roi(
@@ -17,12 +23,14 @@ def extract_3d_roi(
     pipeline = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
-            AddChanneld(keys=["img", "seg"]),
+            EnsureChannelFirstd(keys=["img", "seg"]),
             FindCentroid(),
             GetFixedROISize(eventual_roi_size),
             Pad(),
             CropToROI(),
-            Resized(keys=["img"], spatial_size=[int(save_size * np.sqrt(2))] * 3),
+            Resized(
+                keys=["img"], spatial_size=[int(np.ceil(save_size * np.sqrt(2)))] * 3
+            ),
             ScaleIntensityRanged(
                 keys=["img"], a_min=-1024, a_max=3000, b_min=0, b_max=1, clip=True
             ),
@@ -50,6 +58,16 @@ def find_corresponding_scan(segmention_path):
 
 
 preprocess_dir(
-    r"D:\premium_data\zuyderland \monotherapy\split_segmentations",
-    r"C:\Users\user\data\dl_radiomics\preprocessed_3d",
+    r"D:\premium_data\amphia\monotherapy\split_segmentations",
+    r"C:\Users\user\data\dl_radiomics\preprocessed_3d\amphia",
+)
+
+preprocess_dir(
+    r"D:\premium_data\mst\monotherapy\split_segmentations",
+    r"C:\Users\user\data\dl_radiomics\preprocessed_3d\mst",
+)
+
+preprocess_dir(
+    r"D:\premium_data\zuyderland\monotherapy\split_segmentations",
+    r"C:\Users\user\data\dl_radiomics\preprocessed_3d\zuyderland",
 )
