@@ -1,7 +1,7 @@
 import pandas as pd
 import itertools
 from pathlib import Path
-from monai.data import Dataset
+from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
@@ -23,6 +23,7 @@ class DataModule(LightningDataModule):
         test_center,
         batch_size=32,
     ):
+        super().__init__()
         self.root = Path(path_to_center_folders)
         self.target = pd.read_csv(prediction_target_file_path).set_index("lesion")[
             target
@@ -51,12 +52,12 @@ class DataModule(LightningDataModule):
             )
         )
         train_data, val_data = train_test_split(dev_data, test_size=0.75)
-        self.train_dataset = Dataset(train_data, self.train_transform)
-        self.val_dataset = Dataset(val_data, self.val_transform)
+        self.train_dataset = CacheDataset(train_data, self.train_transform)
+        self.val_dataset = CacheDataset(val_data, self.val_transform)
 
         # test data
         test_data = self.data_dir_to_dict(self.root / self.test_center)
-        self.test_dataset = Dataset(test_data, self.test_transform)
+        self.test_dataset = CacheDataset(test_data, self.test_transform)
 
     def data_dir_to_dict(self, dir):
         return [
@@ -79,11 +80,3 @@ class DataModule(LightningDataModule):
         return DataLoader(
             self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=1
         )
-
-
-dm = DataModule(
-    r"C:\Users\user\data\dl_radiomics\preprocessed_3d",
-    r"C:\Users\user\data\tables\lesion_followup_curated_v4.csv",
-    "liver",
-    "amphia",
-)

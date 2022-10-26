@@ -1,11 +1,6 @@
 import numpy as np
 from pathlib import Path
-from monai.transforms import (
-    Transform,
-    SpatialCrop,
-    BorderPad,
-    SaveImage,
-)
+from monai.transforms import Transform, SpatialCrop, BorderPad, SaveImage, Resize
 
 
 class FindCentroid(Transform):
@@ -48,6 +43,18 @@ class CropToROI(Transform):
         return data
 
 
+class ResizedAndSetMetadata(Transform):
+    def __init__(self, spatial_size):
+        super().__init__()
+        self.spatial_size = spatial_size
+
+    def __call__(self, data):
+        resizer = Resize(spatial_size=self.spatial_size)
+        data["img"] = resizer(data["img"])
+
+        return data
+
+
 class Save(Transform):
     def __init__(self, output_dir):
         super().__init__()
@@ -56,7 +63,10 @@ class Save(Transform):
     def __call__(self, data):
         postfix = Path(data["seg"].meta["filename_or_obj"]).name.split(".")[0][-1:]
         saver = SaveImage(
-            output_dir=self.output_dir, output_postfix=postfix, separate_folder=False
+            output_dir=self.output_dir,
+            output_postfix=postfix,
+            separate_folder=False,
+            resample=False,
         )
         saver(data["img"])
 
