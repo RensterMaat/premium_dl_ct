@@ -42,7 +42,7 @@ class DataModule(LightningDataModule):
         self.test_transform = self.train_transform
         self.centers = [c.name for c in self.root.iterdir()]
 
-    def setup(self):
+    def setup(self, *args, **kwargs):
         dev_centers = [c for c in self.centers if not c == self.test_center]
 
         # development data
