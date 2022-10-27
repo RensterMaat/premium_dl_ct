@@ -55,13 +55,21 @@ class DataModule(LightningDataModule):
                 *[self.data_dir_to_dict(self.root / c) for c in dev_centers]
             )
         )
-        train_data, val_data = train_test_split(dev_data, test_size=0.75)
+        train_data, val_data = self.grouped_train_val_split(dev_data, val_fraction=0.25)
         self.train_dataset = CacheDataset(train_data, self.train_transform)
         self.val_dataset = CacheDataset(val_data, self.val_transform)
 
         # test data
         test_data = self.data_dir_to_dict(self.root / self.test_center)
         self.test_dataset = CacheDataset(test_data, self.test_transform)
+
+    def grouped_train_val_split(self, dev_data, val_fraction):
+        all_patients = [x["patient"] for x in dev_data]
+        random.shuffle(all_patients)
+
+        split_ix = int(len(all_patients) * (1 - val_fraction))
+
+        return dev_data[:split_ix], dev_data[split_ix:]
 
     def data_dir_to_dict(self, dir):
         return [
