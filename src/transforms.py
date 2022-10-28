@@ -12,9 +12,9 @@ class FindCentroid(Transform):
 
 
 class GetFixedROISize(Transform):
-    def __init__(self, eventual_size=100):
+    def __init__(self, roi_size=100):
         super().__init__()
-        self.size = eventual_size * np.sqrt(2)
+        self.size = roi_size
 
     def __call__(self, data):
         assert (data["img"].affine == data["seg"].affine).all()

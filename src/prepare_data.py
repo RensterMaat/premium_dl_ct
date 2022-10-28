@@ -17,9 +17,7 @@ from transforms import (
 )
 
 
-def extract_3d_roi(
-    segmentation_path, destination_path, eventual_roi_size=100, save_size=96
-):
+def extract_3d_roi(segmentation_path, destination_path, roi_size=100, save_size=96):
     pipeline = Compose(
         [
             LoadImaged(keys=["img", "seg"]),
@@ -28,9 +26,7 @@ def extract_3d_roi(
             GetFixedROISize(eventual_roi_size),
             Pad(),
             CropToROI(),
-            Resized(
-                keys=["img"], spatial_size=[int(np.ceil(save_size * np.sqrt(2)))] * 3
-            ),
+            Resized(keys=["img"], spatial_size=[save_size] * 3),
             ScaleIntensityRanged(
                 keys=["img"], a_min=-1024, a_max=3000, b_min=0, b_max=1, clip=True
             ),
