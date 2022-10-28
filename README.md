@@ -5,8 +5,6 @@ Deep learning on CT imaging to predict response to checkpoint inhibitors in mela
 # todo
 - adapt dataset to allow patient level classification tasks
     - only filter on missing lesion labels in train dataset, not in val and test
-    - add patient outcome to model
-- lesion and patient level auc as metric
 - implement 2.5d preprocessing
 - implement different scales in preprocessing (both zoom and crop)
 - data augmentation 
