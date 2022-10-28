@@ -26,7 +26,7 @@ class GetFixedROISize(Transform):
         return data
 
 
-class Pad(Transform):
+class PadForCrop(Transform):
     def __call__(self, data):
         border_size = (np.ceil(data["roi_size"] / 2)).astype(int).tolist()
         padder = BorderPad(border_size, value=-1024)
@@ -35,7 +35,7 @@ class Pad(Transform):
         return data
 
 
-class CropToROI(Transform):
+class CropToCentroidWithSize(Transform):
     def __call__(self, data):
         cropper = SpatialCrop(roi_center=data["centroid"], roi_size=data["roi_size"])
         data["img"] = cropper(data["img"])
@@ -84,4 +84,51 @@ class Save(Transform):
         )
         saver(data["img"])
 
+        return data
+
+
+class GetZoomedROI(Transform):
+    def __init__(self, margin=10):
+        super().__init__()
+        self.margin = margin
+
+    def __call__(self, data):
+        where = torch.where(data["seg"])[1:]
+        bbox_min_coordinates = np.array([axis.min() for axis in where])
+        bbox_max_coordinates = np.array([axis.max() for axis in where])
+        bbox_dim = bbox_max_coordinates - bbox_min_coordinates
+
+        pix_size = data["seg"].affine.diag().numpy()[:-1]
+        bbox_size = bbox_dim * pix_size
+
+        roi_size = bbox_size.max() + self.margin
+
+        roi_dim = roi_size / pix_size
+        margin_to_add = (roi_dim - bbox_dim) / 2
+        roi_min_coordinates = (bbox_min_coordinates - margin_to_add).astype(int)
+        roi_max_coordinates = (bbox_max_coordinates + margin_to_add).astype(int)
+
+        data["roi_start"] = roi_min_coordinates
+        data["roi_end"] = roi_max_coordinates
+        data["pix_margin"] = np.array(np.ceil(margin_to_add).astype(int)).tolist()
+
+        return data
+
+
+class PadForZoom(Transform):
+    def __call__(self, data):
+        padder = BorderPad(data["pix_margin"], value=-1024)
+        data["img"] = padder(data["img"])
+        data["roi_start"] = data["roi_start"] + data["pix_margin"]
+        data["roi_end"] = data["roi_end"] + data["pix_margin"]
+
+        return data
+
+
+class CropToROI(Transform):
+    def __call__(self, data):
+        cropper = SpatialCrop(roi_start=data["roi_start"], roi_end=data["roi_end"])
+        data["img"] = cropper(data["img"])
+        data["img"].meta["spatial_shape"] = np.array(data["img"].shape[1:])
+        data["img"].meta["affine"] = data["img"].meta["affine"] * np.eye(4)
         return data
