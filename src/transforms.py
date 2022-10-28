@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 from pathlib import Path
 from monai.transforms import Transform, SpatialCrop, BorderPad, SaveImage, Resize
@@ -51,6 +52,19 @@ class ResizedAndSetMetadata(Transform):
     def __call__(self, data):
         resizer = Resize(spatial_size=self.spatial_size)
         data["img"] = resizer(data["img"])
+
+        return data
+
+
+class OrthogonalSlices(Transform):
+    def __call__(self, data):
+        center_slices = (np.array(data["img"].shape)[1:] / 2).astype(int)
+
+        sagittal = data["img"][0, center_slices[0]]
+        coronal = data["img"][0, :, center_slices[1]]
+        transverse = data["img"][0, :, :, center_slices[2]]
+
+        data["img"] = torch.stack([sagittal, coronal, transverse])
 
         return data
 
