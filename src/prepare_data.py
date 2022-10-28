@@ -23,7 +23,7 @@ def extract_3d_roi(segmentation_path, destination_path, roi_size=100, save_size=
             LoadImaged(keys=["img", "seg"]),
             EnsureChannelFirstd(keys=["img", "seg"]),
             FindCentroid(),
-            GetFixedROISize(eventual_roi_size),
+            GetFixedROISize(roi_size),
             Pad(),
             CropToROI(),
             Resized(keys=["img"], spatial_size=[save_size] * 3),
