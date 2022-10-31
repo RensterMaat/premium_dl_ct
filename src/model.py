@@ -10,10 +10,10 @@ from monai.networks.nets.densenet import DenseNet121
 
 
 class Model(LightningModule):
-    def __init__(self, aggregation_function="mean"):
+    def __init__(self, config):
         super().__init__()
         self.model = DenseNet121(spatial_dims=3, in_channels=1, out_channels=1)
-        self.aggregation_function = aggregation_function
+        self.aggregation_function = config.aggregation_function
 
         self.train_auc = BinaryAUROC(pos_label=1)
         self.val_auc = BinaryAUROC(pos_label=1)
@@ -97,7 +97,7 @@ class Model(LightningModule):
 
     def get_patient_level_preds(self, preds, patients):
         results = pd.DataFrame(
-            [patients, preds.squeeze()], index=["patient", "preds"]
+            [patients, preds.squeeze().detach().cpu()], index=["patient", "preds"]
         ).transpose()
         patient_level_preds = (
             results.groupby("patient")
