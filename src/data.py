@@ -9,6 +9,7 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
+from transforms import RandTranspose
 from monai.transforms import (
     Compose,
     LoadImaged,
@@ -25,7 +26,8 @@ class DataModule(LightningDataModule):
         prediction_target_file_path,
         target,
         test_center,
-        batch_size=32,
+        dim,
+        max_batch_size=32,
     ):
         super().__init__()
         self.root = Path(path_to_center_folders)
@@ -33,17 +35,13 @@ class DataModule(LightningDataModule):
             target
         ]
         self.test_center = test_center
-        self.batch_size = batch_size
-        self.train_transform = Compose(
-            [
-                LoadImaged(keys=["img"]),
-                EnsureChannelFirstd(keys=["img"]),
-                CenterSpatialCropd(keys=["img"], roi_size=(96, 96, 96)),
-                ToTensord(keys=["img", "label"]),
-            ]
-        )
-        self.val_transform = self.train_transform
-        self.test_transform = self.train_transform
+        self.max_batch_size = max_batch_size
+        self.dim = dim
+
+        self.train_transform = self.get_transform(augmented=True)
+        self.val_transform = self.get_transform(augmented=True)
+        self.test_transform = self.get_transform(augmented=False)
+
         self.centers = [c.name for c in self.root.iterdir()]
 
     def setup(self, *args, **kwargs):
@@ -83,34 +81,53 @@ class DataModule(LightningDataModule):
         ]
 
     def train_dataloader(self):
-        return DataLoader(
-            self.train_dataset,
-            batch_sampler=GroupedSampler(
-                groups=[x["patient"] for x in self.train_dataset],
-                shuffle=True,
-                max_batch_size=16,
-            ),
-        )
+        return get_dataloader(self.train_dataset, shuffle=True)
 
     def val_dataloader(self):
+        return get_dataloader(self.val_dataset)
+
+    def test_dataloader(self):
+        return get_dataloader(self.test_dataset)
+
+    def get_dataloader(self, dataset, shuffle=False):
         return DataLoader(
-            self.val_dataset,
+            dataset,
             batch_sampler=GroupedSampler(
-                groups=[x["patient"] for x in self.val_dataset],
-                shuffle=False,
-                max_batch_size=16,
+                groups=[x["patient"] for x in self.test_dataset],
+                shuffle=shuffle,
+                max_batch_size=self.max_batch_size,
             ),
         )
 
-    def test_dataloader(self):
-        return DataLoader(
-            self.test_dataset,
-            batch_sampler=GroupedSampler(
-                groups=[x["patient"] for x in self.test_dataset],
-                shuffle=False,
-                max_batch_size=16,
-            ),
+    def get_transform(self, augmented=False):
+        load = Compose(
+            [
+                LoadImaged(keys=["img"]),
+                EnsureChannelFirstd(keys=["img"]),
+            ]
         )
+
+        if self.dim == 3:
+            augmentation = Compose(
+                [
+                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=0),
+                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=1),
+                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=2),
+                    RandTranspose(),
+                ]
+            )
+        elif self.dim == 2:s
+            augmentation = Compose(
+                [
+                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=0),
+                    RandRotate90d(keys=["img"], prob=1, k=4),
+                ]
+            )
+
+        if augmented:
+            return Compose([load, augmentation, ToTensord(keys=["img"])])
+        else:
+            return Compose([load, ToTensord(keys=["img"])])
 
 
 class GroupedSampler(Sampler):

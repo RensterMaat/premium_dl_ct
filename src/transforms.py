@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 from pathlib import Path
+from itertools import permutations
 from monai.transforms import Transform, SpatialCrop, BorderPad, SaveImage, Resize
 
 
@@ -131,4 +132,15 @@ class CropToROI(Transform):
         data["img"] = cropper(data["img"])
         data["img"].meta["spatial_shape"] = np.array(data["img"].shape[1:])
         data["img"].meta["affine"] = data["img"].meta["affine"] * np.eye(4)
+        return data
+
+
+class RandTranspose(Transform):
+    def __call__(self, data):
+        axis_orderings = list(permutations([0, 1, 2]))
+        chosen_ordering = random.sample(axis_orderings, 1)[0]
+        ordering_including_batch = [0] + [ax + 1 for ax in chosen_ordering]
+
+        data["img"] = data["img"].permute(ordering_including_batch)
+
         return data
