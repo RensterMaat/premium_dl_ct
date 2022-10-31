@@ -27,7 +27,7 @@ class DataModule(LightningDataModule):
         target,
         test_center,
         dim,
-        max_batch_size=32,
+        max_batch_size=16,
     ):
         super().__init__()
         self.root = Path(path_to_center_folders)

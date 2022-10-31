@@ -21,7 +21,7 @@ class GetFixedROISize(Transform):
     def __call__(self, data):
         assert (data["img"].affine == data["seg"].affine).all()
 
-        roi_size = (self.size / data["img"].affine.diag()[:-1]).int()
+        roi_size = (self.size / data["img"].affine.diag()[:-1]).abs().int()
         data["roi_size"] = np.array(roi_size)
 
         return data

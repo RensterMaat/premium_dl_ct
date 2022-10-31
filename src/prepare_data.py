@@ -131,8 +131,8 @@ class DataPipeline:
 
 def main():
     CENTERS = [
-        "amphia",
-        "isala",
+        # "amphia",
+        # "isala",
         "lumc",
         "maxima",
         "mst" "radboud",
