@@ -91,7 +91,7 @@ class DataModule(LightningDataModule):
         return DataLoader(
             dataset,
             batch_sampler=GroupedSampler(
-                groups=[x["patient"] for x in self.test_dataset],
+                groups=[x["patient"] for x in dataset],
                 shuffle=shuffle,
                 max_batch_size=self.max_batch_size,
             ),

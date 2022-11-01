@@ -15,6 +15,10 @@ class Model(LightningModule):
         self.model = DenseNet121(spatial_dims=3, in_channels=1, out_channels=1)
         self.aggregation_function = config.aggregation_function
 
+        self.lr = config.lr
+        self.t_max = config.t_max
+        self.lr_min = config.lr_min
+
         self.train_auc = BinaryAUROC(pos_label=1)
         self.val_auc = BinaryAUROC(pos_label=1)
 
@@ -31,9 +35,12 @@ class Model(LightningModule):
         return self.model(x)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=1e-2)
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr)
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            self.optimizer, T_max=self.t_max, eta_min=self.lr_min
+        )
 
-        return optimizer
+        return {"optimizer": self.optimizer, "lr_scheduler": self.scheduler}
 
     def training_step(self, batch, batch_idx):
         x, y = batch["img"], batch["label"]
