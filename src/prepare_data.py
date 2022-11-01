@@ -133,9 +133,10 @@ def main():
     CENTERS = [
         # "amphia",
         # "isala",
-        "lumc",
-        "maxima",
-        "mst" "radboud",
+        # "lumc",
+        # "maxima",
+        "mst",
+        "radboud",
         "umcu",
         "vumc",
         "zuyderland",
@@ -157,7 +158,7 @@ def main():
         3,
         128,
         method="crop",
-        roi_size=10,
+        roi_size=50,
     ).run()
 
     DataPipeline(
