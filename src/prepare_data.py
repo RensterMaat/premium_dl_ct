@@ -131,10 +131,10 @@ class DataPipeline:
 
 def main():
     CENTERS = [
-        # "amphia",
+        "amphia",
         # "isala",
         # "lumc",
-        # "maxima",
+        "maxima",
         "mst",
         "radboud",
         "umcu",
@@ -152,13 +152,40 @@ def main():
             ]
         )
 
+    # DataPipeline(
+    #     input_folders,
+    #     r"C:\Users\user\data\dl_radiomics",
+    #     3,
+    #     128,
+    #     method="crop",
+    #     roi_size=50,
+    # ).run()
+
+    # DataPipeline(
+    #     input_folders,
+    #     r"C:\Users\user\data\dl_radiomics",
+    #     2,
+    #     256,
+    #     method="crop",
+    #     roi_size=100,
+    # ).run()
+
+    # DataPipeline(
+    #     input_folders,
+    #     r"C:\Users\user\data\dl_radiomics",
+    #     2,
+    #     256,
+    #     method="crop",
+    #     roi_size=150,
+    # ).run()
+
     DataPipeline(
         input_folders,
         r"C:\Users\user\data\dl_radiomics",
-        3,
-        128,
-        method="crop",
-        roi_size=50,
+        2,
+        256,
+        method="zoom",
+        margin=0,
     ).run()
 
     DataPipeline(
@@ -167,7 +194,16 @@ def main():
         2,
         256,
         method="zoom",
-        margin=5,
+        margin=10,
+    ).run()
+
+    DataPipeline(
+        input_folders,
+        r"C:\Users\user\data\dl_radiomics",
+        2,
+        256,
+        method="zoom",
+        margin=50,
     ).run()
 
 
