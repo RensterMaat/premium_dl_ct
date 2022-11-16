@@ -9,29 +9,29 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-from src.transforms import RandTranspose
+from transforms import RandTranspose
 from monai.transforms import (
     Compose,
     LoadImaged,
     EnsureChannelFirstd,
-    CenterSpatialCropd,
     ToTensord,
     RandFlipd,
+    RandRotate90d,
 )
 
 
 class DataModule(LightningDataModule):
     def __init__(self, input_data_root, prediction_target_file_path, config):
         super().__init__()
-        if config.method == "crop":
-            folder_name = f"dim-{config.dim}_size-{config.size}_method-{config.method}_roi_size-{config.roi_size}"
-        elif config.method == "zoom":
-            folder_name = f"dim-{config.dim}_size-{config.size}_method-{config.method}_margin-{config.margin}"
+        if config.roi_selection_method == "crop":
+            folder_name = f"dim-{config.dim}_size-{config.size}_method-{config.roi_selection_method}_roi_size-{config.roi_size}"
+        elif config.roi_selection_method == "zoom":
+            folder_name = f"dim-{config.dim}_size-{config.size}_method-{config.roi_selection_method}_margin-{config.margin}"
         self.root = Path(input_data_root) / folder_name
 
-        self.target = pd.read_csv(prediction_target_file_path).set_index("lesion")[
-            config.lesion_target
-        ]
+        self.target = pd.read_csv(prediction_target_file_path, sep=";").set_index(
+            "lesion"
+        )[config.lesion_target]
         self.test_center = config.test_center
         self.max_batch_size = config.max_batch_size
         self.dim = config.dim
@@ -101,7 +101,7 @@ class DataModule(LightningDataModule):
         load = Compose(
             [
                 LoadImaged(keys=["img"]),
-                EnsureChannelFirstd(keys=["img"]),
+                # EnsureChannelFirstd(keys=["img"]),
             ]
         )
 
@@ -118,7 +118,7 @@ class DataModule(LightningDataModule):
             augmentation = Compose(
                 [
                     RandFlipd(keys=["img"], prob=0.5, spatial_axis=0),
-                    RandRotate90d(keys=["img"], prob=1, k=4),
+                    RandRotate90d(keys=["img"], prob=1, max_k=4),
                 ]
             )
 

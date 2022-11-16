@@ -1,23 +1,34 @@
-import torch
 import wandb
 import numpy as np
 import pandas as pd
+import torch
 import torch.nn as nn
-from torchmetrics.classification import BinaryAUROC, Accuracy
-from pytorch_lightning.loggers import WandbLogger
+from monai.networks.nets import densenet
 from pytorch_lightning import LightningModule, Trainer, seed_everything
-from monai.networks.nets.densenet import DenseNet121
+from pytorch_lightning.loggers import WandbLogger
+from torchmetrics.classification import Accuracy, BinaryAUROC
 
 
 class Model(LightningModule):
     def __init__(self, config):
         super().__init__()
-        self.model = DenseNet121(spatial_dims=3, in_channels=1, out_channels=1)
-        self.aggregation_function = config.aggregation_function
 
-        self.lr = config.lr
-        self.t_max = config.t_max
-        self.lr_min = config.lr_min
+        if config.model == "densenet121":
+            architecture = densenet.DenseNet121
+        elif config.model == "densenet169":
+            architecture = densenet.DenseNet169
+        elif config.model == "densenet201":
+            architecture = densenet.DenseNet201
+
+        self.model = architecture(
+            spatial_dims=2,
+            in_channels=3,
+            out_channels=1,
+            dropout_prob=config.dropout,
+            pretrained=config.pretrained,
+        )
+
+        self.config = config
 
         self.train_auc = BinaryAUROC(pos_label=1)
         self.val_auc = BinaryAUROC(pos_label=1)
@@ -25,19 +36,40 @@ class Model(LightningModule):
         self.train_patient_auc = BinaryAUROC(pos_label=1)
         self.val_patient_auc = BinaryAUROC(pos_label=1)
 
+        # self.patient_labels = (
+        #     pd.read_csv(r"C:\Users\user\data\tables\dmtr.csv")
+        #     .set_index("id")["locafmetlong"]
+        #     .fillna(0)
+        # )
         self.patient_labels = (
-            pd.read_csv(r"C:\Users\user\data\tables\dmtr.csv")
-            .set_index("id")["locafmetlong"]
-            .fillna(0)
+            pd.read_csv(
+                r"C:\Users\user\data\tables\lesion_followup_curated_v4.csv", sep=";"
+            )
+            .groupby("patient")
+            .lung.max()
         )
 
     def forward(self, x):
         return self.model(x)
 
     def configure_optimizers(self):
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr)
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer, T_max=self.t_max, eta_min=self.lr_min
+        if self.config.optimizer == "sgd":
+            self.optimizer = torch.optim.SGD(
+                self.model.parameters(),
+                lr=self.config.learning_rate_max,
+                weight_decay=self.config.weight_decay,
+                nesterov=True,
+                momentum=self.config.momentum,
+            )
+        elif self.config.optimizer == "adamw":
+            self.optimizer = torch.optim.AdamW(
+                self.model.parameters(),
+                lr=self.config.learning_rate_max,
+                weight_decay=self.config.weight_decay,
+            )
+
+        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            self.optimizer, T_0=self.config.T_0, eta_min=self.config.lr_min
         )
 
         return {"optimizer": self.optimizer, "lr_scheduler": self.scheduler}
@@ -63,6 +95,7 @@ class Model(LightningModule):
                 "train_loss": loss,
                 "train_auc": self.train_auc.compute(),
                 "train_patient_auc": self.train_patient_auc.compute(),
+                "lr": self.optimizer.param_groups[0]["lr"],
             },
             on_step=False,
             on_epoch=True,
@@ -115,12 +148,16 @@ class Model(LightningModule):
         return patient_level_preds
 
     def get_corresponding_patient_level_labels(self, patients):
+        patients = [
+            pt.replace("abdomen", "").replace("thorax", "").replace("hals", "")
+            for pt in patients
+        ]
         return torch.tensor(self.patient_labels.loc[patients].values)
 
     def get_aggregation_function(self):
-        if self.aggregation_function == "mean":
+        if self.config.aggregation_function == "mean":
             return np.mean
-        elif self.aggregation_function == "max":
+        elif self.config.aggregation_function == "max":
             return np.max
-        elif self.aggregation_function == "min":
+        elif self.config.aggregation_function == "min":
             return np.min
