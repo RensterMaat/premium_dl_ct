@@ -100,7 +100,7 @@ class GetZoomedROI(Transform):
         bbox_max_coordinates = np.array([axis.max() for axis in where])
         bbox_dim = bbox_max_coordinates - bbox_min_coordinates
 
-        pix_size = data["seg"].affine.diag().numpy()[:-1]
+        pix_size = data["seg"].affine.abs().diag().numpy()[:-1]
         bbox_size = bbox_dim * pix_size
 
         roi_size = bbox_size.max() + self.margin
