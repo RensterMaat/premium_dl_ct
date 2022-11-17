@@ -131,15 +131,15 @@ class DataPipeline:
 
 def main():
     CENTERS = [
-        "amphia",
-        # "isala",
-        # "lumc",
-        "maxima",
-        "mst",
-        "radboud",
-        "umcu",
-        "vumc",
-        "zuyderland",
+        # "amphia",
+        "isala",
+        "lumc",
+        # "maxima",
+        # "mst",
+        # "radboud",
+        # "umcu",
+        # "vumc",
+        # "zuyderland",
     ]
 
     r = Path(r"D:\premium_data")
@@ -179,14 +179,14 @@ def main():
     #     roi_size=150,
     # ).run()
 
-    DataPipeline(
-        input_folders,
-        r"C:\Users\user\data\dl_radiomics",
-        2,
-        256,
-        method="zoom",
-        margin=0,
-    ).run()
+    # DataPipeline(
+    #     input_folders,
+    #     r"C:\Users\user\data\dl_radiomics",
+    #     2,
+    #     256,
+    #     method="zoom",
+    #     margin=0,
+    # ).run()
 
     DataPipeline(
         input_folders,

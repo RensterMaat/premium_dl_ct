@@ -56,8 +56,9 @@ class DataModule(LightningDataModule):
         self.val_dataset = CacheDataset(val_data, self.val_transform)
 
         # test data
-        test_data = self.data_dir_to_dict(self.root / self.test_center)
-        self.test_dataset = CacheDataset(test_data, self.test_transform)
+        if self.test_center:
+            test_data = self.data_dir_to_dict(self.root / self.test_center)
+            self.test_dataset = CacheDataset(test_data, self.test_transform)
 
     def grouped_train_val_split(self, dev_data, val_fraction):
         all_patients = [x["patient"] for x in dev_data]
