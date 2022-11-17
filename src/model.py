@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-from monai.networks.nets import densenet
+from monai.networks import nets
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import WandbLogger
 from torchmetrics.classification import Accuracy, BinaryAUROC
@@ -13,26 +13,11 @@ class Model(LightningModule):
     def __init__(self, config):
         super().__init__()
 
-        if config.model == "densenet121":
-            architecture = densenet.DenseNet121
-        elif config.model == "densenet169":
-            architecture = densenet.DenseNet169
-        elif config.model == "densenet201":
-            architecture = densenet.DenseNet201
-
-        self.model = architecture(
-            spatial_dims=2,
-            in_channels=3,
-            out_channels=1,
-            dropout_prob=config.dropout,
-            pretrained=config.pretrained,
-        )
-
         self.config = config
+        self.setup_model()
 
         self.train_auc = BinaryAUROC(pos_label=1)
         self.val_auc = BinaryAUROC(pos_label=1)
-
         self.train_patient_auc = BinaryAUROC(pos_label=1)
         self.val_patient_auc = BinaryAUROC(pos_label=1)
 
@@ -58,7 +43,7 @@ class Model(LightningModule):
                 self.model.parameters(),
                 lr=self.config.learning_rate_max,
                 weight_decay=self.config.weight_decay,
-                nesterov=True,
+                nesterov=self.config.momentum > 0,
                 momentum=self.config.momentum,
             )
         elif self.config.optimizer == "adamw":
@@ -134,6 +119,45 @@ class Model(LightningModule):
         )
 
         return loss
+
+    def setup_model(self):
+        if self.config.model == "densenet121":
+            architecture = nets.densenet.DenseNet121
+        elif self.config.model == "densenet169":
+            architecture = nets.densenet.DenseNet169
+        elif self.config.model == "densenet201":
+            architecture = nets.densenet.DenseNet201
+        elif self.config.model == "SEResNet50":
+            architecture = nets.SEResNet50
+        elif self.config.model == "SEResNet101":
+            architecture = nets.SEResNet50
+        elif self.config.model == "SEResNet152":
+            architecture = nets.SEResNet50
+        elif self.config.model.startswith("efficientnet"):
+            self.model = nets.efficientnet.EfficientNetBN(
+                self.config.model,
+                spatial_dims=self.config.dim,
+                in_channels=3 if self.config.dim == 2 else 1,
+                num_classes=1,
+                pretrained=self.config.pretrained,
+            )
+
+        if self.config.model.startswith("densenet"):
+            self.model = architecture(
+                spatial_dims=self.config.dim,
+                in_channels=3 if self.config.dim == 2 else 1,
+                out_channels=1,
+                dropout_prob=self.config.dropout,
+                pretrained=self.config.pretrained,
+            )
+        elif self.config.model.startswith("SEResNet"):
+            self.model = architecture(
+                spatial_dims=self.config.dim,
+                in_channels=3 if self.config.dim == 2 else 1,
+                num_classes=1,
+                dropout_prob=self.config.dropout,
+                pretrained=self.config.pretrained,
+            )
 
     def get_patient_level_preds(self, preds, patients):
         results = pd.DataFrame(
