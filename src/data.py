@@ -98,6 +98,7 @@ class DataModule(LightningDataModule):
                 groups=[x["patient"] for x in dataset],
                 shuffle=shuffle,
                 max_batch_size=self.max_batch_size,
+                num_workers=12
             ),
         )
 
