@@ -28,7 +28,7 @@ class Model(LightningModule):
         # )
         self.patient_labels = (
             pd.read_csv(
-                r"C:\Users\user\data\tables\lesion_followup_curated_v4.csv", sep=";"
+                "/hpc/dla_patho/premium/rens/tables/lesion_followup_curated_v4.csv", sep=";"
             )
             .groupby("patient")
             .lung.max()

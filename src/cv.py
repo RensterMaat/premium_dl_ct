@@ -23,8 +23,8 @@ def train():
     seed_everything(wandb.config.seed)
 
     dm = DataModule(
-        r"C:\Users\user\data\dl_radiomics",
-        r"C:\Users\user\data\tables\lesion_followup_curated_v4.csv",
+        "/hpc/dla_patho/premium/rens/dl_radiomics",
+        "/hpc/dla_patho/premium/rens/tables/lesion_followup_curated_v4.csv",
         wandb.config,
     )
 
@@ -44,11 +44,10 @@ def train():
     trainer = Trainer(
         max_epochs=wandb.config.max_epochs,
         gpus=1,
-        deterministic=True,
+        # deterministic=True,
         fast_dev_run=False,
         logger=logger,
-        checkpoint_callback=checkpoint_callback,
-        callbacks=[early_stopping],
+        callbacks=[early_stopping,checkpoint_callback],
     )
 
     trainer.fit(model, dm)
