@@ -1,5 +1,5 @@
-# https://www.paepper.com/blog/posts/hyperparameter-tuning-on-numerai-data-with-pytorch-lightning-and-wandb/
 import wandb
+import numpy as np
 from cv import train
 
 
@@ -26,13 +26,17 @@ sweep_config = {
         "dropout": {"min": 0.0, "max": 0.7},
         "momentum": {"values": [0.0, 0.5, 0.9, 0.99]},
         "pretrained": {"values": [True, False]},
-        "learning_rate_max": {"min": -6, "max": -2, "distribution": "log_uniform"},
+        "learning_rate_max": {
+            "min": -13.82,  # corresponds to 10e-6
+            "max": -4.605,  # corresponds to 10e-2
+            "distribution": "log_uniform",
+        },
         "roi_selection_method": {"values": ["crop", "zoom"]},
         "roi_size": {"values": [50, 100, 150]},
         "margin": {"values": [0, 10, 50]},
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep2")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep4")
 
 wandb.agent(sweep_id, function=train)

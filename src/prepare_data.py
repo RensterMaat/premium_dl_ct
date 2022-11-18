@@ -131,15 +131,15 @@ class DataPipeline:
 
 def main():
     CENTERS = [
-        # "amphia",
+        "amphia",
         "isala",
         "lumc",
-        # "maxima",
-        # "mst",
-        # "radboud",
-        # "umcu",
-        # "vumc",
-        # "zuyderland",
+        "maxima",
+        "mst",
+        "radboud",
+        "umcu",
+        "vumc",
+        "zuyderland",
     ]
 
     r = Path(r"D:\premium_data")
@@ -152,47 +152,47 @@ def main():
             ]
         )
 
-    # DataPipeline(
-    #     input_folders,
-    #     r"C:\Users\user\data\dl_radiomics",
-    #     3,
-    #     128,
-    #     method="crop",
-    #     roi_size=50,
-    # ).run()
-
-    # DataPipeline(
-    #     input_folders,
-    #     r"C:\Users\user\data\dl_radiomics",
-    #     2,
-    #     256,
-    #     method="crop",
-    #     roi_size=100,
-    # ).run()
-
-    # DataPipeline(
-    #     input_folders,
-    #     r"C:\Users\user\data\dl_radiomics",
-    #     2,
-    #     256,
-    #     method="crop",
-    #     roi_size=150,
-    # ).run()
-
-    # DataPipeline(
-    #     input_folders,
-    #     r"C:\Users\user\data\dl_radiomics",
-    #     2,
-    #     256,
-    #     method="zoom",
-    #     margin=0,
-    # ).run()
+    DataPipeline(
+        input_folders,
+        r"C:\Users\user\data\dl_radiomics",
+        3,
+        128,
+        method="crop",
+        roi_size=50,
+    ).run()
 
     DataPipeline(
         input_folders,
         r"C:\Users\user\data\dl_radiomics",
-        2,
-        256,
+        3,
+        128,
+        method="crop",
+        roi_size=100,
+    ).run()
+
+    DataPipeline(
+        input_folders,
+        r"C:\Users\user\data\dl_radiomics",
+        3,
+        128,
+        method="crop",
+        roi_size=150,
+    ).run()
+
+    DataPipeline(
+        input_folders,
+        r"C:\Users\user\data\dl_radiomics",
+        3,
+        128,
+        method="zoom",
+        margin=0,
+    ).run()
+
+    DataPipeline(
+        input_folders,
+        r"C:\Users\user\data\dl_radiomics",
+        3,
+        128,
         method="zoom",
         margin=10,
     ).run()
@@ -200,8 +200,8 @@ def main():
     DataPipeline(
         input_folders,
         r"C:\Users\user\data\dl_radiomics",
-        2,
-        256,
+        3,
+        128,
         method="zoom",
         margin=50,
     ).run()
