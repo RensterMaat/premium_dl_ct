@@ -3,7 +3,7 @@
 #SBATCH -t 100:00:00 
 #SBATCH --mem=16G
 #SBATCH -p gpu
-#SBATCH -c 2
+#SBATCH -c 12
 #SBATCH --gpus-per-node=1
 #SBATCH --gres=tmpspace:10G
 
