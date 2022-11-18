@@ -7,6 +7,7 @@ from monai.networks import nets
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import WandbLogger
 from torchmetrics.classification import Accuracy, BinaryAUROC
+from config import lesion_level_labels_csv
 
 
 class Model(LightningModule):
@@ -27,11 +28,7 @@ class Model(LightningModule):
         #     .fillna(0)
         # )
         self.patient_labels = (
-            pd.read_csv(
-                r"C:\Users\user\data\tables\lesion_followup_curated_v4.csv", sep=";"
-            )
-            .groupby("patient")
-            .lung.max()
+            pd.read_csv(lesion_level_labels_csv, sep=";").groupby("patient").lung.max()
         )
 
     def forward(self, x):

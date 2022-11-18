@@ -4,6 +4,7 @@ from pytorch_lightning import Trainer, seed_everything
 from model import Model
 from data import DataModule
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from config import radiomics_folder, lesion_level_labels_csv
 
 
 def train():
@@ -23,8 +24,8 @@ def train():
     seed_everything(wandb.config.seed)
 
     dm = DataModule(
-        r"C:\Users\user\data\dl_radiomics",
-        r"C:\Users\user\data\tables\lesion_followup_curated_v4.csv",
+        radiomics_folder,
+        lesion_level_labels_csv,
         wandb.config,
     )
 
