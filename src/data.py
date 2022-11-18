@@ -52,7 +52,10 @@ class DataModule(LightningDataModule):
             )
         )
         train_data, val_data = self.grouped_train_val_split(dev_data, val_fraction=0.25)
-        self.train_dataset = CacheDataset(train_data, self.train_transform)
+
+        self.train_dataset = CacheDataset(
+            [x for x in train_data if not np.isnan(x["label"])], self.train_transform
+        )
         self.val_dataset = CacheDataset(val_data, self.val_transform)
 
         # test data
