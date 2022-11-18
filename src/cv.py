@@ -45,11 +45,10 @@ def train():
     trainer = Trainer(
         max_epochs=wandb.config.max_epochs,
         gpus=1,
-        deterministic=True,
+        # deterministic=True,
         fast_dev_run=False,
         logger=logger,
-        checkpoint_callback=checkpoint_callback,
-        callbacks=[early_stopping],
+        callbacks=[early_stopping,checkpoint_callback],
     )
 
     trainer.fit(model, dm)
