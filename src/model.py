@@ -7,7 +7,7 @@ from monai.networks import nets
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import WandbLogger
 from torchmetrics.classification import Accuracy, BinaryAUROC
-from config import lesion_level_labels_csv
+from config import lesion_level_labels_csv, dmtr_csv
 
 
 class Model(LightningModule):
@@ -22,9 +22,9 @@ class Model(LightningModule):
         self.train_patient_auc = BinaryAUROC(pos_label=1)
         self.val_patient_auc = BinaryAUROC(pos_label=1)
 
-        self.patient_labels = pd.read_csv(
-            r"C:\Users\user\data\tables\dmtr.csv"
-        ).set_index("id")[config.patient_target]
+        self.patient_labels = pd.read_csv(dmtr_csv).set_index("id")[
+            config.patient_target
+        ]
         # self.patient_labels = (
         #     pd.read_csv(lesion_level_labels_csv, sep=";").groupby("patient").lung.max()
         # )
