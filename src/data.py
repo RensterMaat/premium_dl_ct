@@ -99,7 +99,7 @@ class DataModule(LightningDataModule):
                 shuffle=shuffle,
                 max_batch_size=self.max_batch_size,
             ),
-            num_workers=12,
+            # num_workers=12,
         )
 
     def get_transform(self, augmented=False):
