@@ -15,10 +15,10 @@ def train():
     wandb.config.test_center = None  # "amphia"
     wandb.config.lesion_target = "lesion_response"
     wandb.config.patient_target = "response"
-    wandb.config.max_batch_size = 48
+    wandb.config.max_batch_size = 32
     wandb.config.seed = 0
     wandb.config.max_epochs = 100
-    wandb.config.patience = 5
+    wandb.config.patience = 10
     wandb.config.lr_min = 1e-7
     wandb.config.T_0 = 10
 

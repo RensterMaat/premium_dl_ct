@@ -2,7 +2,7 @@ import wandb
 from cv import train
 
 wandb.agent(
-    'f1fi5fnn',
+    'wos4wef0',
     function=train,
-    project='sweep4'
+    project='sweep6'
 )
