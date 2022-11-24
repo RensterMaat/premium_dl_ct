@@ -140,8 +140,20 @@ class RandTranspose(Transform):
     def __call__(self, data):
         axis_orderings = list(permutations([0, 1, 2]))
         chosen_ordering = random.sample(axis_orderings, 1)[0]
-        ordering_including_batch = [0] + [ax + 1 for ax in chosen_ordering]
 
-        data["img"] = data["img"].permute(ordering_including_batch)
+        ordering_with_channel = [0] + [dim + 1 for dim in chosen_ordering]
 
+        data["img"] = data["img"].permute(ordering_with_channel)
+
+        return data
+
+
+class RandMirror(Transform):
+    def __init__(self, prob=0.1, spatial_axis=0):
+        self.prob = prob
+        self.spatial_axis = spatial_axis
+
+    def __call__(self, data):
+        if np.random.uniform() < self.prob:
+            data["img"] = torch.flip(data["img"], dims=[self.spatial_axis + 1])
         return data
