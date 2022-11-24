@@ -7,8 +7,8 @@ sweep_config = {
     "method": "random",
     "metric": {"name": "valid_patient_auc", "goal": "maximize"},
     "parameters": {
-        "aggregation_function": {"values": ["max", "min", "mean"]},
-        "optimizer": {"values": ["adamw", "sgd"]},
+        "aggregation_function": {"values": ["min"]},
+        "optimizer": {"values": ["adamw"]},  # , "sgd"]},
         "weight_decay": {"values": [0.0, 1e-9, 1e-7, 1e-5, 1e-3, 1e-1]},
         "model": {
             "values": [
@@ -24,11 +24,12 @@ sweep_config = {
             ]
         },
         "dropout": {"min": 0.0, "max": 0.7},
-        "momentum": {"values": [0.0, 0.5, 0.9, 0.99]},
-        "pretrained": {"values": [True, False]},
+        # "momentum": {"values": [0.0, 0.5, 0.9, 0.99]},
+        "pretrained": {"values": [False]},  # , True]},
         "learning_rate_max": {
             "min": -13.82,  # corresponds to 10e-6
-            "max": -4.605,  # corresponds to 10e-2
+            "max": -6.908,  # corresponds to 10e-3
+            # "max": -4.605,  # corresponds to 10e-2
             "distribution": "log_uniform",
         },
         "roi_selection_method": {"values": ["crop", "zoom"]},
@@ -37,6 +38,6 @@ sweep_config = {
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep4")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep7")
 
 wandb.agent(sweep_id, function=train)
