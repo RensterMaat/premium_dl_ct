@@ -7,7 +7,7 @@ from monai.networks import nets
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import WandbLogger
 from torchmetrics.classification import Accuracy, BinaryAUROC
-from config import lesion_level_labels_csv
+from config import lesion_level_labels_csv, dmtr_csv
 
 
 class Model(LightningModule):
@@ -22,14 +22,12 @@ class Model(LightningModule):
         self.train_patient_auc = BinaryAUROC(pos_label=1)
         self.val_patient_auc = BinaryAUROC(pos_label=1)
 
+        self.patient_labels = pd.read_csv(dmtr_csv).set_index("id")[
+            config.patient_target
+        ]
         # self.patient_labels = (
-        #     pd.read_csv(r"C:\Users\user\data\tables\dmtr.csv")
-        #     .set_index("id")["locafmetlong"]
-        #     .fillna(0)
+        #     pd.read_csv(lesion_level_labels_csv, sep=";").groupby("patient").lung.max()
         # )
-        self.patient_labels = (
-            pd.read_csv(lesion_level_labels_csv, sep=";").groupby("patient").lung.max()
-        )
 
     def forward(self, x):
         return self.model(x)
@@ -91,8 +89,12 @@ class Model(LightningModule):
         x, y = batch["img"], batch["label"]
         y_hat = torch.sigmoid(self.model(x))
 
-        loss = nn.BCELoss()(y_hat.squeeze(), y.float())
-        self.val_auc.update(y_hat.squeeze(), y.int())
+        non_nan_indices = [not torch.isnan(lesion_label) for lesion_label in y]
+
+        loss = nn.BCELoss()(
+            y_hat.squeeze()[non_nan_indices], y.float()[non_nan_indices]
+        )
+        self.val_auc.update(y_hat.squeeze()[non_nan_indices], y.int()[non_nan_indices])
 
         patient_level_preds = self.get_patient_level_preds(y_hat, batch["patient"])
         patient_level_labels = self.get_corresponding_patient_level_labels(
