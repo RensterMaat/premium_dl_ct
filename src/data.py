@@ -9,7 +9,7 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-from transforms import RandTranspose
+from transforms import RandTranspose, RandMirror
 from monai.transforms import (
     Compose,
     LoadImaged,
@@ -51,10 +51,14 @@ class DataModule(LightningDataModule):
                 *[self.data_dir_to_dict(self.root / c) for c in dev_centers]
             )
         )
-        train_data, val_data = self.grouped_train_val_split(dev_data, val_fraction=0.25)
+        self.train_data, val_data = self.grouped_train_val_split(
+            dev_data, val_fraction=0.25
+        )
 
         self.train_dataset = CacheDataset(
-            [x for x in train_data if not np.isnan(x["label"])], self.train_transform
+            [x for x in self.train_data if not np.isnan(x["label"])],
+            self.train_transform,
+            cache_rate=0,
         )
         self.val_dataset = CacheDataset(val_data, self.val_transform)
 
@@ -106,16 +110,16 @@ class DataModule(LightningDataModule):
         load = Compose(
             [
                 LoadImaged(keys=["img"]),
-                # EnsureChannelFirstd(keys=["img"]),
             ]
         )
 
         if self.dim == 3:
             augmentation = Compose(
                 [
-                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=0),
-                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=1),
-                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=2),
+                    EnsureChannelFirstd(keys=["img"]),
+                    RandMirror(prob=0.5, spatial_axis=0),
+                    RandMirror(prob=0.5, spatial_axis=1),
+                    RandMirror(prob=0.5, spatial_axis=2),
                     RandTranspose(),
                 ]
             )
