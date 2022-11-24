@@ -52,7 +52,10 @@ class DataModule(LightningDataModule):
             )
         )
         train_data, val_data = self.grouped_train_val_split(dev_data, val_fraction=0.25)
-        self.train_dataset = CacheDataset(train_data, self.train_transform)
+
+        self.train_dataset = CacheDataset(
+            [x for x in train_data if not np.isnan(x["label"])], self.train_transform
+        )
         self.val_dataset = CacheDataset(val_data, self.val_transform)
 
         # test data
@@ -94,9 +97,9 @@ class DataModule(LightningDataModule):
             batch_sampler=GroupedSampler(
                 groups=[x["patient"] for x in dataset],
                 shuffle=shuffle,
-                max_batch_size=self.max_batch_size,  
+                max_batch_size=self.max_batch_size,
             ),
-            num_workers=12
+            num_workers=12,
         )
 
     def get_transform(self, augmented=False):
