@@ -15,9 +15,9 @@ sweep_config = {
                 "densenet121",
                 "densenet169",
                 "densenet201",
-                "efficientnet-b0",
-                "efficientnet-b1",
-                "efficientnet-b2",
+                # "efficientnet-b0",
+                # "efficientnet-b1",
+                # "efficientnet-b2",
                 "SEResNet50",
                 "SEResNet101",
                 "SEResNet152",
@@ -28,16 +28,17 @@ sweep_config = {
         "pretrained": {"values": [False]},  # , True]},
         "learning_rate_max": {
             "min": -13.82,  # corresponds to 10e-6
-            "max": -6.908,  # corresponds to 10e-3
+            "max": -9.210,
+            # "max": -6.908,  # corresponds to 10e-3
             # "max": -4.605,  # corresponds to 10e-2
             "distribution": "log_uniform",
         },
-        "roi_selection_method": {"values": ["crop", "zoom"]},
+        "roi_selection_method": {"values": ["crop"]},  # , "zoom"]},
         "roi_size": {"values": [50, 100, 150]},
-        "margin": {"values": [0, 10, 50]},
+        # "margin": {"values": [0, 10, 50]},
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep7")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep8")
 
 wandb.agent(sweep_id, function=train)
