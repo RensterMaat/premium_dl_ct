@@ -126,7 +126,7 @@ class DataModule(LightningDataModule):
         elif self.dim == 2:
             augmentation = Compose(
                 [
-                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=0),
+                    RandFlipd(keys=["img"], prob=0.5, spatial_axis=0),  # checken !!!!!
                     RandRotate90d(keys=["img"], prob=1, max_k=4),
                 ]
             )
