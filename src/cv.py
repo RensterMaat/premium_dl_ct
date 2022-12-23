@@ -66,6 +66,7 @@ if __name__ == "__main__":
     wandb.config.momentum = 0
     wandb.config.pretrained = False
     wandb.config.learning_rate_max = 1e-4
+    wandb.config.sampler = 'patient_grouped'
 
     train()
 
