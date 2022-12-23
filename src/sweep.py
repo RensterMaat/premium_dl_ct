@@ -12,15 +12,17 @@ sweep_config = {
         "weight_decay": {"values": [0.0, 1e-9, 1e-7, 1e-5, 1e-3, 1e-1]},
         "model": {
             "values": [
-                "densenet121",
-                "densenet169",
-                "densenet201",
+                # "densenet121",
+                # "densenet169",
+                # "densenet201",
                 # "efficientnet-b0",
                 # "efficientnet-b1",
                 # "efficientnet-b2",
                 "SEResNet50",
                 "SEResNet101",
                 "SEResNet152",
+                'SEResNext50',
+                'SEResNext101'
             ]
         },
         "dropout": {"min": 0.0, "max": 0.7},
@@ -36,9 +38,10 @@ sweep_config = {
         "roi_selection_method": {"values": ["crop"]},  # , "zoom"]},
         "roi_size": {"values": [50, 100, 150]},
         # "margin": {"values": [0, 10, 50]},
+        'sampler':{'values':['vanilla','patient_grouped','stratified']}
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep8")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep9")
 
 wandb.agent(sweep_id, function=train)

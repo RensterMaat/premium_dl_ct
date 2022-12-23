@@ -142,7 +142,7 @@ def main():
         "zuyderland",
     ]
 
-    r = Path(r"D:\premium_data")
+    r = Path("/mnt/d/premium_data")
     input_folders = []
     for center in CENTERS:
         input_folders.extend(
@@ -152,59 +152,33 @@ def main():
             ]
         )
 
+    # DataPipeline(
+    #     input_folders,
+    #     "/mnt/c/Users/user/data/dl_radiomics",
+    #     3,
+    #     int(np.ceil(128 * np.sqrt(2))),
+    #     method="crop",
+    #     roi_size=int(np.ceil(50 * np.sqrt(2))),
+    # ).run()
+
     DataPipeline(
         input_folders,
-        r"C:\Users\user\data\dl_radiomics",
+        "/mnt/c/Users/user/data/dl_radiomics",
         3,
-        128,
+        int(np.ceil(128 * np.sqrt(2))),
         method="crop",
-        roi_size=50,
+        roi_size=int(np.ceil(100 * np.sqrt(2))),
     ).run()
 
     DataPipeline(
         input_folders,
-        r"C:\Users\user\data\dl_radiomics",
+        "/mnt/c/Users/user/data/dl_radiomics",
         3,
-        128,
+        int(np.ceil(128 * np.sqrt(2))),
         method="crop",
-        roi_size=100,
+        roi_size=int(np.ceil(150 * np.sqrt(2))),
     ).run()
 
-    DataPipeline(
-        input_folders,
-        r"C:\Users\user\data\dl_radiomics",
-        3,
-        128,
-        method="crop",
-        roi_size=150,
-    ).run()
-
-    DataPipeline(
-        input_folders,
-        r"C:\Users\user\data\dl_radiomics",
-        3,
-        128,
-        method="zoom",
-        margin=0,
-    ).run()
-
-    DataPipeline(
-        input_folders,
-        r"C:\Users\user\data\dl_radiomics",
-        3,
-        128,
-        method="zoom",
-        margin=10,
-    ).run()
-
-    DataPipeline(
-        input_folders,
-        r"C:\Users\user\data\dl_radiomics",
-        3,
-        128,
-        method="zoom",
-        margin=50,
-    ).run()
 
 
 if __name__ == "__main__":
