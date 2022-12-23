@@ -6,3 +6,4 @@ wandb
 __pycache__
 project_skeleton_on_lung_lesions
 src/config.py
+*.pyc
