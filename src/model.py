@@ -61,20 +61,20 @@ class Model(LightningModule):
         loss = nn.BCELoss()(y_hat.squeeze(), y.float())
         self.train_auc.update(y_hat.squeeze(), y.int())
 
-        patient_level_preds = self.get_patient_level_preds(y_hat, batch["patient"])
-        patient_level_labels = self.get_corresponding_patient_level_labels(
-            patient_level_preds.index
-        )
+        # patient_level_preds = self.get_patient_level_preds(y_hat, batch["patient"])
+        # patient_level_labels = self.get_corresponding_patient_level_labels(
+        #     patient_level_preds.index
+        # )
 
-        self.train_patient_auc.update(
-            torch.tensor(patient_level_preds.values), patient_level_labels
-        )
+        # self.train_patient_auc.update(
+        #     torch.tensor(patient_level_preds.values), patient_level_labels
+        # )
 
         self.log_dict(
             {
                 "train_loss": loss,
                 "train_auc": self.train_auc.compute(),
-                "train_patient_auc": self.train_patient_auc.compute(),
+                # "train_patient_auc": self.train_patient_auc.compute(),
                 "lr": self.optimizer.param_groups[0]["lr"],
             },
             on_step=False,
@@ -83,7 +83,33 @@ class Model(LightningModule):
             logger=True,
         )
 
-        return loss
+        return {
+            'loss':loss,
+            'preds':y_hat,
+            'patient':batch['patient']
+        }
+
+    def training_epoch_end(self, outputs):
+        preds = torch.concat([output['preds'] for output in outputs])
+        patient = [el for sl in outputs for el in sl['patient']]
+        
+        patient_level_preds = self.get_patient_level_preds(preds, patient)
+        patient_level_labels = self.get_corresponding_patient_level_labels(patient_level_preds.index)
+
+        self.val_patient_auc.update(
+            torch.tensor(patient_level_preds.values), patient_level_labels
+        )
+
+        self.log_dict(
+            {
+                'valid_patient_auc': self.val_patient_auc.compute()
+            },
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True
+        )
+        
 
     def validation_step(self, batch, batch_idx):
         x, y = batch["img"], batch["label"]
@@ -96,20 +122,20 @@ class Model(LightningModule):
         )
         self.val_auc.update(y_hat.squeeze()[non_nan_indices], y.int()[non_nan_indices])
 
-        patient_level_preds = self.get_patient_level_preds(y_hat, batch["patient"])
-        patient_level_labels = self.get_corresponding_patient_level_labels(
-            patient_level_preds.index
-        )
+        # patient_level_preds = self.get_patient_level_preds(y_hat, batch["patient"])
+        # patient_level_labels = self.get_corresponding_patient_level_labels(
+        #     patient_level_preds.index
+        # )
 
-        self.val_patient_auc.update(
-            torch.tensor(patient_level_preds.values), patient_level_labels
-        )
+        # self.val_patient_auc.update(
+        #     torch.tensor(patient_level_preds.values), patient_level_labels
+        # )
 
         self.log_dict(
             {
                 "valid_loss": loss,
                 "valid_auc": self.val_auc.compute(),
-                "valid_patient_auc": self.val_patient_auc.compute(),
+                # "valid_patient_auc": self.val_patient_auc.compute(),
             },
             on_step=False,
             on_epoch=True,
@@ -117,7 +143,32 @@ class Model(LightningModule):
             logger=True,
         )
 
-        return loss
+        return {
+            'loss':loss,
+            'preds':y_hat,
+            'patient':batch['patient']
+        }
+
+    def validation_epoch_end(self, outputs):
+        preds = torch.concat([output['preds'] for output in outputs])
+        patient = [el for sl in outputs for el in sl['patient']]
+        
+        patient_level_preds = self.get_patient_level_preds(preds, patient)
+        patient_level_labels = self.get_corresponding_patient_level_labels(patient_level_preds.index)
+
+        self.val_patient_auc.update(
+            torch.tensor(patient_level_preds.values), patient_level_labels
+        )
+
+        self.log_dict(
+            {
+                'valid_patient_auc': self.val_patient_auc.compute()
+            },
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True
+        )
 
     def setup_model(self):
         if self.config.model == "densenet121":
@@ -132,6 +183,10 @@ class Model(LightningModule):
             architecture = nets.SEResNet50
         elif self.config.model == "SEResNet152":
             architecture = nets.SEResNet50
+        elif self.config.model == 'SEResNext50':
+            architecture = nets.SEResNext50
+        elif self.config.model == 'SEResNext101':
+            architecture = nets.SEResNext101
         elif self.config.model.startswith("efficientnet"):
             self.model = nets.efficientnet.EfficientNetBN(
                 self.config.model,
@@ -149,7 +204,7 @@ class Model(LightningModule):
                 dropout_prob=self.config.dropout,
                 pretrained=self.config.pretrained,
             )
-        elif self.config.model.startswith("SEResNet"):
+        elif self.config.model.startswith("SEResNe"):
             self.model = architecture(
                 spatial_dims=self.config.dim,
                 in_channels=3 if self.config.dim == 2 else 1,

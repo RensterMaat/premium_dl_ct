@@ -3,6 +3,7 @@ Deep learning on CT imaging to predict response to checkpoint inhibitors in mela
 
 
 # todo
+- balanced batches
 - augmentation
     - rotation to all possible directions
     - shear/scale/translations
