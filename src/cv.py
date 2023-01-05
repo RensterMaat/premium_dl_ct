@@ -10,12 +10,12 @@ from config import radiomics_folder, lesion_level_labels_csv
 def train():
     wandb.init()
     wandb.config.roi_selection_method = "crop"
-    wandb.config.dim = 3
-    wandb.config.size = 128
+    # wandb.config.dim = 3
+    wandb.config.size = 128 if wandb.config.dim == 3 else 256
     wandb.config.test_center = None  # "amphia"
     wandb.config.lesion_target = "lesion_response"
     wandb.config.patient_target = "response"
-    wandb.config.max_batch_size = 6
+    wandb.config.max_batch_size = 6 if wandb.config.dim == 3 else 32
     wandb.config.seed = 0
     wandb.config.max_epochs = 100
     wandb.config.patience = 10
