@@ -7,6 +7,7 @@ sweep_config = {
     "method": "random",
     "metric": {"name": "valid_patient_auc", "goal": "maximize"},
     "parameters": {
+        "dim":{"values":[2, 3]},
         "aggregation_function": {"values": ["min"]},
         "optimizer": {"values": ["adamw"]},  # , "sgd"]},
         "weight_decay": {"values": [0.0, 1e-9, 1e-7, 1e-5, 1e-3, 1e-1]},
@@ -21,8 +22,8 @@ sweep_config = {
                 "SEResNet50",
                 "SEResNet101",
                 "SEResNet152",
-                'SEResNext50',
-                'SEResNext101'
+                # 'SEResNext50',
+                # 'SEResNext101'
             ]
         },
         "dropout": {"min": 0.0, "max": 0.7},
@@ -38,10 +39,10 @@ sweep_config = {
         "roi_selection_method": {"values": ["crop"]},  # , "zoom"]},
         "roi_size": {"values": [50, 100, 150]},
         # "margin": {"values": [0, 10, 50]},
-        'sampler':{'values':['vanilla','patient_grouped','stratified']}
+        'sampler':{'values':['stratified']}
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep9")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep10")
 
 wandb.agent(sweep_id, function=train)
