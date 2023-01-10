@@ -9,7 +9,7 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-from src.transforms import RandTranspose, RandMirror
+from transforms import RandTranspose, RandMirror
 from monai.transforms import (
     Compose,
     LoadImaged,
@@ -176,48 +176,28 @@ class StratifiedSampler(Sampler):
     def make_batches_from_labels(self):
         last_batch_size = len(self.labels) % self.batch_size
 
-        positives = np.where(self.labels == 1)[0]
-        negatives = np.where(self.labels == 0)[0]
-        nans = np.where(np.isnan(self.labels))[0]
+        if last_batch_size > 0:
+            last_batch = list(range(len(self.labels)))[-last_batch_size:]
+            labels_of_ordinary_batches = self.labels[:-last_batch_size]
+        else:
+            last_batch = []
+            labels_of_ordinary_batches = self.labels
 
-        positives_in_last_batch = round(
-            last_batch_size * (len(positives) / len(self.labels))
-        )
-        negatives_in_last_batch = round(
-            last_batch_size * (len(negatives) / len(self.labels))
-        )
-        if positives_in_last_batch + negatives_in_last_batch > last_batch_size:
-            negatives_in_last_batch -= 1
-        nans_in_last_batch = (
-            last_batch_size - positives_in_last_batch - negatives_in_last_batch
-        )
+        positives = np.where(labels_of_ordinary_batches == 1)[0]
+        negatives = np.where(labels_of_ordinary_batches == 0)[0]
+        nans = np.where(np.isnan(labels_of_ordinary_batches))[0]
 
-        last_batch = (
-            np.concatenate(
-                [
-                    positives[-positives_in_last_batch:],
-                    negatives[-negatives_in_last_batch:],
-                    nans[-nans_in_last_batch:] if nans_in_last_batch else [],
-                ]
-            )
-            .astype(int)
-            .tolist()
-        )
-
-        all_other_batches = (
-            np.concatenate(
-                [
-                    positives[:-positives_in_last_batch],
-                    negatives[:-negatives_in_last_batch],
-                    nans[:-nans_in_last_batch] if nans_in_last_batch else nans,
-                ]
-            )
+        ordinary_batches = (
+            np.concatenate([positives, negatives, nans])
             .reshape(self.batch_size, -1)
             .transpose()
             .tolist()
         )
 
-        self.all_batches = all_other_batches + [last_batch]
+        self.all_batches = ordinary_batches
+
+        if last_batch:
+            self.all_batches.append(last_batch)
 
     def __iter__(self):
         if self.shuffle:
