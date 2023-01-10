@@ -70,14 +70,18 @@ class DataModule(LightningDataModule):
             # self.test_dataset = CacheDataset(test_data, self.test_transform)
 
     def grouped_train_val_split(self, dev_data, val_fraction):
-        all_patients = [x["patient"] for x in dev_data]
+        all_patients = np.unique([x["patient"] for x in dev_data])
         random.shuffle(all_patients)
 
         split_ix = int(len(all_patients) * (1 - val_fraction))
+        train_patients, val_patients = all_patients[:split_ix], all_patients[split_ix:]
 
-        train_data = [x for x in dev_data[:split_ix] if not np.isnan(x["label"])]
-        # train_data = dev_data[:split_ix]
-        val_data = dev_data[split_ix:]
+        train_data = [
+            x
+            for x in dev_data
+            if x["patient"] in train_patients and not np.isnan(x["label"])
+        ]
+        val_data = [x for x in dev_data if x["patient"] in val_patients]
 
         return train_data, val_data
 
@@ -93,7 +97,9 @@ class DataModule(LightningDataModule):
         ]
 
     def train_dataloader(self):
-        return self.get_dataloader(self.train_data, transform=self.train_transform, shuffle=True)
+        return self.get_dataloader(
+            self.train_data, transform=self.train_transform, shuffle=True
+        )
 
     def val_dataloader(self):
         return self.get_dataloader(self.val_data, transform=self.val_transform)
@@ -104,7 +110,7 @@ class DataModule(LightningDataModule):
     def get_dataloader(self, data, transform, shuffle=False):
         dataset = CacheDataset(data, transform)
         batch_sampler = self.get_sampler(data, shuffle)
-        
+
         return DataLoader(
             dataset,
             batch_sampler=batch_sampler,
@@ -113,19 +119,19 @@ class DataModule(LightningDataModule):
         )
 
     def get_sampler(self, data, shuffle):
-        if self.config.sampler == 'patient_grouped':
+        if self.config.sampler == "patient_grouped":
             return GroupedSampler(
                 groups=[x["patient"] for x in data],
                 shuffle=shuffle,
                 max_batch_size=self.max_batch_size,
-            ) 
-        elif self.config.sampler == 'stratified':
-            return StratifiedSampler(
-                labels = [x["label"] for x in data],
-                shuffle=shuffle,
-                batch_size=self.max_batch_size
             )
-        elif self.config.sampler == 'vanilla':
+        elif self.config.sampler == "stratified":
+            return StratifiedSampler(
+                labels=[x["label"] for x in data],
+                shuffle=shuffle,
+                batch_size=self.max_batch_size,
+            )
+        elif self.config.sampler == "vanilla":
             return None
 
     def get_transform(self, augmented=False):
@@ -174,26 +180,45 @@ class StratifiedSampler(Sampler):
         negatives = np.where(self.labels == 0)[0]
         nans = np.where(np.isnan(self.labels))[0]
 
-        positives_in_last_batch = round(last_batch_size * (len(positives) / len(self.labels)))
-        negatives_in_last_batch = round(last_batch_size * (len(negatives) / len(self.labels)))
+        positives_in_last_batch = round(
+            last_batch_size * (len(positives) / len(self.labels))
+        )
+        negatives_in_last_batch = round(
+            last_batch_size * (len(negatives) / len(self.labels))
+        )
         if positives_in_last_batch + negatives_in_last_batch > last_batch_size:
             negatives_in_last_batch -= 1
-        nans_in_last_batch = last_batch_size - positives_in_last_batch - negatives_in_last_batch
+        nans_in_last_batch = (
+            last_batch_size - positives_in_last_batch - negatives_in_last_batch
+        )
 
-        last_batch = np.concatenate([
-            positives[-positives_in_last_batch:],
-            negatives[-negatives_in_last_batch:],
-            nans[-nans_in_last_batch:] if nans_in_last_batch else []
-        ]).astype(int).tolist()
+        last_batch = (
+            np.concatenate(
+                [
+                    positives[-positives_in_last_batch:],
+                    negatives[-negatives_in_last_batch:],
+                    nans[-nans_in_last_batch:] if nans_in_last_batch else [],
+                ]
+            )
+            .astype(int)
+            .tolist()
+        )
 
-        all_other_batches = np.concatenate([
-            positives[:-positives_in_last_batch],
-            negatives[:-negatives_in_last_batch],
-            nans[:-nans_in_last_batch] if nans_in_last_batch else nans
-        ]).reshape(self.batch_size, -1).transpose().tolist()
+        all_other_batches = (
+            np.concatenate(
+                [
+                    positives[:-positives_in_last_batch],
+                    negatives[:-negatives_in_last_batch],
+                    nans[:-nans_in_last_batch] if nans_in_last_batch else nans,
+                ]
+            )
+            .reshape(self.batch_size, -1)
+            .transpose()
+            .tolist()
+        )
 
         self.all_batches = all_other_batches + [last_batch]
-        
+
     def __iter__(self):
         if self.shuffle:
             random.shuffle(self.all_batches)

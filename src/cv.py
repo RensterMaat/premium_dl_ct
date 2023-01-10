@@ -10,7 +10,7 @@ from config import radiomics_folder, lesion_level_labels_csv
 def train():
     wandb.init()
     wandb.config.roi_selection_method = "crop"
-    # wandb.config.dim = 3
+    # wandb.config.dim = 2
     wandb.config.size = 128 if wandb.config.dim == 3 else 256
     wandb.config.test_center = None  # "amphia"
     wandb.config.lesion_target = "lesion_response"
@@ -33,8 +33,8 @@ def train():
     model = Model(wandb.config)
 
     logger = WandbLogger(
-        name="hello6",
-        project="project_skeleton_on_lung_lesions",
+        name="hello7",
+        project="debugging",
     )
 
     checkpoint_callback = ModelCheckpoint(monitor="valid_patient_auc", mode="max")
@@ -57,16 +57,17 @@ def train():
 
 if __name__ == "__main__":
     wandb.init()
-    wandb.config.aggregation_function = "max"
-    wandb.config.roi_size = 50
-    wandb.config.optimizer = "sgd"
-    wandb.config.weight_decay = 0.001
-    wandb.config.model = "efficientnet-b2"
-    wandb.config.dropout = 0.2
+    wandb.config.aggregation_function = "min"
+    wandb.config.roi_size = 150
+    wandb.config.optimizer = "adamw"
+    wandb.config.weight_decay = 0.00001
+    wandb.config.model = "SEResNet50"
+    wandb.config.dropout = 0.07292136035956572
     wandb.config.momentum = 0
     wandb.config.pretrained = False
-    wandb.config.learning_rate_max = 1e-4
-    wandb.config.sampler = 'patient_grouped'
+    wandb.config.learning_rate_max = 0.000023059510738335888
+    wandb.config.sampler = "stratified"
+    wandb.config.dim = 2
 
     train()
 
