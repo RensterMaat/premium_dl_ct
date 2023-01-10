@@ -114,7 +114,7 @@ class DataModule(LightningDataModule):
         return DataLoader(
             dataset,
             batch_sampler=batch_sampler,
-            batch_size=8 if not batch_sampler else 1,
+            batch_size=6 if not batch_sampler else 1,
             # num_workers=12,
         )
 
