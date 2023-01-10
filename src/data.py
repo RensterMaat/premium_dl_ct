@@ -9,7 +9,7 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-from transforms import RandTranspose, RandMirror
+from src.transforms import RandTranspose, RandMirror
 from monai.transforms import (
     Compose,
     LoadImaged,
