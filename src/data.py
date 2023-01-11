@@ -4,17 +4,25 @@ import numpy as np
 import random
 from collections import defaultdict
 from torch.utils.data import Sampler
+import numpy as np
+import random
+from collections import defaultdict
+from torch.utils.data import Sampler
 from pathlib import Path
+from monai.data import CacheDataset
 from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
+from transforms import RandTranspose, RandMirror
 from transforms import RandTranspose, RandMirror
 from monai.transforms import (
     Compose,
     LoadImaged,
     EnsureChannelFirstd,
     ToTensord,
+    RandFlipd,
+    RandRotate90d,
     RandFlipd,
     RandRotate90d,
 )
@@ -42,8 +50,30 @@ class DataModule(LightningDataModule):
         self.val_transform = self.get_transform(augmented=True)
         self.test_transform = self.get_transform(augmented=False)
 
+    def __init__(self, input_data_root, prediction_target_file_path, config):
+        super().__init__()
+        if config.roi_selection_method == "crop":
+            folder_name = f"dim-{config.dim}_size-{config.size}_method-{config.roi_selection_method}_roi_size-{config.roi_size}"
+        elif config.roi_selection_method == "zoom":
+            folder_name = f"dim-{config.dim}_size-{config.size}_method-{config.roi_selection_method}_margin-{config.margin}"
+        self.root = Path(input_data_root) / folder_name
+
+        self.target = pd.read_csv(prediction_target_file_path, sep=";").set_index(
+            "lesion"
+        )[config.lesion_target]
+        self.test_center = config.test_center
+        self.max_batch_size = config.max_batch_size
+        self.dim = config.dim
+
+        self.config = config
+
+        self.train_transform = self.get_transform(augmented=True)
+        self.val_transform = self.get_transform(augmented=True)
+        self.test_transform = self.get_transform(augmented=False)
+
         self.centers = [c.name for c in self.root.iterdir()]
 
+    def setup(self, *args, **kwargs):
     def setup(self, *args, **kwargs):
         dev_centers = [c for c in self.centers if not c == self.test_center]
 
@@ -53,6 +83,16 @@ class DataModule(LightningDataModule):
                 *[self.data_dir_to_dict(self.root / c) for c in dev_centers]
             )
         )
+        self.train_data, self.val_data = self.grouped_train_val_split(
+            dev_data, val_fraction=0.25
+        )
+
+        # self.train_dataset = CacheDataset(
+        #     [x for x in self.train_data if not np.isnan(x["label"])],
+        #     self.train_transform,
+        #     cache_rate=0,
+        # )
+        # self.val_dataset = CacheDataset(val_data, self.val_transform)
         self.train_data, self.val_data = self.grouped_train_val_split(
             dev_data, val_fraction=0.25
         )
@@ -92,6 +132,11 @@ class DataModule(LightningDataModule):
                 "label": self.target.loc[lesion_path.name],
                 "patient": lesion_path.name.split(".")[0][:-2],
             }
+            {
+                "img": str(lesion_path),
+                "label": self.target.loc[lesion_path.name],
+                "patient": lesion_path.name.split(".")[0][:-2],
+            }
             for lesion_path in dir.iterdir()
             if lesion_path.name in self.target.index
         ]
@@ -102,6 +147,7 @@ class DataModule(LightningDataModule):
         )
 
     def val_dataloader(self):
+        return self.get_dataloader(self.val_data, transform=self.val_transform)
         return self.get_dataloader(self.val_data, transform=self.val_transform)
 
     def test_dataloader(self):
