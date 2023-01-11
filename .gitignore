@@ -9,3 +9,4 @@ src/config.py
 *.pyc
 debugging
 *.ckpt
+..bfg-report
