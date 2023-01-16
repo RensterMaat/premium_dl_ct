@@ -39,10 +39,15 @@ sweep_config = {
         "roi_selection_method": {"values": ["crop"]},  # , "zoom"]},
         "roi_size": {"values": [50, 100, 150]},
         # "margin": {"values": [0, 10, 50]},
-        "sampler": {"values": ["stratified", "patient_grouped", "vanilla"]},
+        "sampler": {"values": [
+            "stratified", 
+            # "patient_grouped", 
+            # "vanilla"
+        ]},
+
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep11")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep12")
 
 wandb.agent(sweep_id, function=train)
