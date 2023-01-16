@@ -42,7 +42,7 @@ class DataModule(LightningDataModule):
         self.val_transform = self.get_transform(augmented=True)
         self.test_transform = self.get_transform(augmented=False)
 
-        self.centers = [c.name for c in self.root.iterdir()]
+        self.centers = [c.name for c in self.root.iterdir() if not c.name == 'umcg']
 
     def setup(self, *args, **kwargs):
         dev_centers = [c for c in self.centers if not c == self.test_center]
@@ -57,17 +57,9 @@ class DataModule(LightningDataModule):
             dev_data, val_fraction=0.25
         )
 
-        # self.train_dataset = CacheDataset(
-        #     [x for x in self.train_data if not np.isnan(x["label"])],
-        #     self.train_transform,
-        #     cache_rate=0,
-        # )
-        # self.val_dataset = CacheDataset(val_data, self.val_transform)
-
         # test data
         if self.test_center:
             self.test_data = self.data_dir_to_dict(self.root / self.test_center)
-            # self.test_dataset = CacheDataset(test_data, self.test_transform)
 
     def grouped_train_val_split(self, dev_data, val_fraction):
         all_patients = np.unique([x["patient"] for x in dev_data])

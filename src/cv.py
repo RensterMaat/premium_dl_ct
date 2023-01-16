@@ -5,13 +5,6 @@ from model import Model
 from data import DataModule
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from config import radiomics_folder, lesion_level_labels_csv
-import wandb
-from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning import Trainer, seed_everything
-from model import Model
-from data import DataModule
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from config import radiomics_folder, lesion_level_labels_csv
 
 
 def train():
@@ -22,7 +15,7 @@ def train():
     wandb.config.test_center = None  # "amphia"
     wandb.config.lesion_target = "lesion_response"
     wandb.config.patient_target = "response"
-    wandb.config.max_batch_size = 6 if wandb.config.dim == 3 else 32
+    wandb.config.max_batch_size = 6 #if wandb.config.dim == 3 else 32
     wandb.config.seed = 0
     wandb.config.max_epochs = 100
     wandb.config.patience = 10
