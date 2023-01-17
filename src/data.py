@@ -9,7 +9,7 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-from src.transforms import RandTranspose, RandMirror
+from transforms import RandTranspose, RandMirror
 from monai.transforms import (
     Compose,
     LoadImaged,
@@ -42,7 +42,7 @@ class DataModule(LightningDataModule):
         self.val_transform = self.get_transform(augmented=True)
         self.test_transform = self.get_transform(augmented=False)
 
-        self.centers = [c.name for c in self.root.iterdir() if not c.name == 'umcg']
+        self.centers = [c.name for c in self.root.iterdir()]
 
     def setup(self, *args, **kwargs):
         dev_centers = [c for c in self.centers if not c == self.test_center]

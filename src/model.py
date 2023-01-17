@@ -7,7 +7,7 @@ from monai.networks import nets
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import WandbLogger
 from torchmetrics.classification import Accuracy, BinaryAUROC
-from config import lesion_level_labels_csv, dmtr_csv
+from config import lesion_level_labels_csv, dmtr_csv, mini_batch_size
 
 
 class Model(LightningModule):
@@ -25,9 +25,6 @@ class Model(LightningModule):
         self.patient_labels = pd.read_csv(dmtr_csv).set_index("id")[
             config.patient_target
         ]
-        # self.patient_labels = (
-        #     pd.read_csv(lesion_level_labels_csv, sep=";").groupby("patient").lung.max()
-        # )
 
     def forward(self, x):
         return self.model(x)
@@ -56,25 +53,21 @@ class Model(LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, y = batch["img"], batch["label"]
-        y_hat = torch.sigmoid(self.model(x))
+
+        mini_batch_preds = []
+        for ix in range(0, len(x), mini_batch_size):
+            mini_batch = x[ix:ix+mini_batch_size]
+            mini_batch_preds.append(torch.sigmoid(self.model(mini_batch)))
+
+        y_hat = torch.concatenate(mini_batch_preds)
 
         loss = nn.BCELoss()(y_hat.squeeze(), y.float())
         self.train_auc.update(y_hat.squeeze(), y.int())
-
-        # patient_level_preds = self.get_patient_level_preds(y_hat, batch["patient"])
-        # patient_level_labels = self.get_corresponding_patient_level_labels(
-        #     patient_level_preds.index
-        # )
-
-        # self.train_patient_auc.update(
-        #     torch.tensor(patient_level_preds.values), patient_level_labels
-        # )
 
         self.log_dict(
             {
                 "train_loss": loss,
                 "train_auc": self.train_auc.compute(),
-                # "train_patient_auc": self.train_patient_auc.compute(),
                 "lr": self.optimizer.param_groups[0]["lr"],
             },
             on_step=False,
@@ -108,7 +101,13 @@ class Model(LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch["img"], batch["label"]
-        y_hat = torch.sigmoid(self.model(x))
+        
+        mini_batch_preds = []
+        for ix in range(0, len(x), mini_batch_size):
+            mini_batch = x[ix:ix+mini_batch_size]
+            mini_batch_preds.append(torch.sigmoid(self.model(mini_batch)))
+
+        y_hat = torch.concatenate(mini_batch_preds)
 
         non_nan_indices = [not torch.isnan(lesion_label) for lesion_label in y]
 
@@ -117,20 +116,10 @@ class Model(LightningModule):
         )
         self.val_auc.update(y_hat.squeeze()[non_nan_indices], y.int()[non_nan_indices])
 
-        # patient_level_preds = self.get_patient_level_preds(y_hat, batch["patient"])
-        # patient_level_labels = self.get_corresponding_patient_level_labels(
-        #     patient_level_preds.index
-        # )
-
-        # self.val_patient_auc.update(
-        #     torch.tensor(patient_level_preds.values), patient_level_labels
-        # )
-
         self.log_dict(
             {
                 "valid_loss": loss,
                 "valid_auc": self.val_auc.compute(),
-                # "valid_patient_auc": self.val_patient_auc.compute(),
             },
             on_step=False,
             on_epoch=True,
