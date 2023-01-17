@@ -66,7 +66,7 @@ if __name__ == "__main__":
     wandb.config.momentum = 0
     wandb.config.pretrained = False
     wandb.config.learning_rate_max = 0.000023059510738335888
-    wandb.config.sampler = "stratified"
+    wandb.config.sampler = "vanilla"
     wandb.config.dim = 2
 
     train()
