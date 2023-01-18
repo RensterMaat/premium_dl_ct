@@ -4,7 +4,7 @@ from pytorch_lightning import Trainer, seed_everything
 from model import Model
 from data import DataModule
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from config import radiomics_folder, lesion_level_labels_csv
+from config import radiomics_folder, lesion_level_labels_csv, mini_batch_size
 
 
 def train():
@@ -47,6 +47,7 @@ def train():
         max_epochs=wandb.config.max_epochs,
         gpus=1,
         # deterministic=True,
+        accumulate_grad_batches=4,
         fast_dev_run=False,
         logger=logger,
         callbacks=[early_stopping, checkpoint_callback],
@@ -66,8 +67,8 @@ if __name__ == "__main__":
     wandb.config.momentum = 0
     wandb.config.pretrained = False
     wandb.config.learning_rate_max = 0.000023059510738335888
-    wandb.config.sampler = "stratified"
-    wandb.config.dim = 2
+    wandb.config.sampler = "label_organ_stratified"
+    wandb.config.dim = 3
 
     train()
 

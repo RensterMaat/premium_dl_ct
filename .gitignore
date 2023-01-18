@@ -10,3 +10,4 @@ src/config.py
 debugging
 *.ckpt
 ..bfg-report
+scripts/format_dmtr.ipynb

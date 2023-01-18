@@ -117,7 +117,7 @@ class DataPipeline:
 
             self.processor.set_output_folder(target_folder)
 
-            for segmentation_file in list(input_folder.iterdir())[312:]:
+            for segmentation_file in list(input_folder.iterdir()):
                 scan_file = self.find_corresponding_scan(segmentation_file)
                 data = {"img": scan_file, "seg": segmentation_file}
                 self.processor(data)
@@ -154,41 +154,41 @@ def main():
             ]
         )
 
-    DataPipeline(
-        input_folders,
-        "/mnt/c/Users/user/data/dl_radiomics",
-        3,
-        128,
-        method="crop",
-        roi_size=50,
-    ).run()
+    # DataPipeline(
+    #     input_folders,
+    #     "/mnt/c/Users/user/data/dl_radiomics",
+    #     3,
+    #     128,
+    #     method="crop",
+    #     roi_size=50,
+    # ).run()
 
-    DataPipeline(
-        input_folders,
-        "/mnt/c/Users/user/data/dl_radiomics",
-        3,
-        128,
-        method="crop",
-        roi_size=100,
-    ).run()
+    # DataPipeline(
+    #     input_folders,
+    #     "/mnt/c/Users/user/data/dl_radiomics",
+    #     3,
+    #     128,
+    #     method="crop",
+    #     roi_size=100,
+    # ).run()
 
-    DataPipeline(
-        input_folders,
-        "/mnt/c/Users/user/data/dl_radiomics",
-        3,
-        128,
-        method="crop",
-        roi_size=150,
-    ).run()
+    # DataPipeline(
+    #     input_folders,
+    #     "/mnt/c/Users/user/data/dl_radiomics",
+    #     3,
+    #     128,
+    #     method="crop",
+    #     roi_size=150,
+    # ).run()
 
-    DataPipeline(
-        input_folders,
-        "/mnt/c/Users/user/data/dl_radiomics",
-        2,
-        256,
-        method="crop",
-        roi_size=50,
-    ).run()
+    # DataPipeline(
+    #     input_folders,
+    #     "/mnt/c/Users/user/data/dl_radiomics",
+    #     2,
+    #     256,
+    #     method="crop",
+    #     roi_size=50,
+    # ).run()
 
     DataPipeline(
         input_folders,

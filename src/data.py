@@ -29,9 +29,9 @@ class DataModule(LightningDataModule):
             folder_name = f"dim-{config.dim}_size-{config.size}_method-{config.roi_selection_method}_margin-{config.margin}"
         self.root = Path(input_data_root) / folder_name
 
-        self.target = pd.read_csv(prediction_target_file_path, sep=";").set_index(
+        self.lesion_level_data = pd.read_csv(prediction_target_file_path, sep=";").set_index(
             "lesion"
-        )[config.lesion_target]
+        )
         self.test_center = config.test_center
         self.max_batch_size = config.max_batch_size
         self.dim = config.dim
@@ -42,7 +42,7 @@ class DataModule(LightningDataModule):
         self.val_transform = self.get_transform(augmented=True)
         self.test_transform = self.get_transform(augmented=False)
 
-        self.centers = [c.name for c in self.root.iterdir() if not c.name == 'umcg']
+        self.centers = [c.name for c in self.root.iterdir()]
 
     def setup(self, *args, **kwargs):
         dev_centers = [c for c in self.centers if not c == self.test_center]
@@ -81,11 +81,12 @@ class DataModule(LightningDataModule):
         return [
             {
                 "img": str(lesion_path),
-                "label": self.target.loc[lesion_path.name],
+                "label": self.lesion_level_data.loc[lesion_path.name, self.config.lesion_target],
                 "patient": lesion_path.name.split(".")[0][:-2],
+                "organ": self.lesion_level_data.loc[lesion_path.name, 'organ']
             }
             for lesion_path in dir.iterdir()
-            if lesion_path.name in self.target.index
+            if lesion_path.name in self.lesion_level_data.index
         ]
 
     def train_dataloader(self):
@@ -106,7 +107,7 @@ class DataModule(LightningDataModule):
         return DataLoader(
             dataset,
             batch_sampler=batch_sampler,
-            batch_size=6 if not batch_sampler else 1,
+            batch_size=self.config.max_batch_size if not batch_sampler else 1,
             # num_workers=12,
         )
 
@@ -117,9 +118,15 @@ class DataModule(LightningDataModule):
                 shuffle=shuffle,
                 max_batch_size=self.max_batch_size,
             )
-        elif self.config.sampler == "stratified":
+        elif self.config.sampler == "label_stratified":
             return StratifiedSampler(
-                labels=[x["label"] for x in data],
+                groups=[[x["label"]] for x in data],
+                shuffle=shuffle,
+                batch_size=self.max_batch_size,
+            )
+        elif self.config.sampler == "label_organ_stratified":
+            return StratifiedSampler(
+                groups=[[x["label"], x["organ"]] for x in data],
                 shuffle=shuffle,
                 batch_size=self.max_batch_size,
             )
@@ -158,29 +165,32 @@ class DataModule(LightningDataModule):
 
 
 class StratifiedSampler(Sampler):
-    def __init__(self, labels, batch_size, shuffle=False):
-        self.labels = np.array(labels)
+    def __init__(self, groups, batch_size, shuffle=False):
+        self.groups = np.array(['_'.join([str(el) for el in x]) for x in groups])
         self.batch_size = batch_size
         self.shuffle = shuffle
 
         self.make_batches_from_labels()
 
     def make_batches_from_labels(self):
-        last_batch_size = len(self.labels) % self.batch_size
+        last_batch_size = len(self.groups) % self.batch_size
 
         if last_batch_size > 0:
-            last_batch = list(range(len(self.labels)))[-last_batch_size:]
-            labels_of_ordinary_batches = self.labels[:-last_batch_size]
+            last_batch = list(range(len(self.groups)))[-last_batch_size:]
+            groups_of_ordinary_batches = self.groups[:-last_batch_size]
         else:
             last_batch = []
-            labels_of_ordinary_batches = self.labels
+            groups_of_ordinary_batches = self.groups
 
-        positives = np.where(labels_of_ordinary_batches == 1)[0]
-        negatives = np.where(labels_of_ordinary_batches == 0)[0]
-        nans = np.where(np.isnan(labels_of_ordinary_batches))[0]
+        unique_groups = np.unique(groups_of_ordinary_batches)
+
+        group_indices = []
+        for unique_group in unique_groups:
+            indices = np.where(groups_of_ordinary_batches == unique_group)[0]
+            group_indices.append(indices)
 
         ordinary_batches = (
-            np.concatenate([positives, negatives, nans])
+            np.concatenate(group_indices)
             .reshape(self.batch_size, -1)
             .transpose()
             .tolist()
