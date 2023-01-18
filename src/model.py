@@ -7,7 +7,7 @@ from monai.networks import nets
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import WandbLogger
 from torchmetrics.classification import Accuracy, BinaryAUROC
-from config import lesion_level_labels_csv, dmtr_csv, mini_batch_size
+from config import lesion_level_labels_csv, dmtr_csv
 
 
 class Model(LightningModule):
@@ -54,14 +54,9 @@ class Model(LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch["img"], batch["label"]
 
-        mini_batch_preds = []
-        for ix in range(0, len(x), mini_batch_size):
-            mini_batch = x[ix:ix+mini_batch_size]
-            mini_batch_preds.append(torch.sigmoid(self.model(mini_batch)))
+        y_hat = torch.sigmoid(self.model(x))
 
-        y_hat = torch.concatenate(mini_batch_preds)
-
-        loss = nn.BCELoss()(y_hat.squeeze(), y.float())
+        loss = nn.BCELoss()(y_hat.squeeze(-1), y.float())
         self.train_auc.update(y_hat.squeeze(), y.int())
 
         self.log_dict(
@@ -101,13 +96,8 @@ class Model(LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch["img"], batch["label"]
-        
-        mini_batch_preds = []
-        for ix in range(0, len(x), mini_batch_size):
-            mini_batch = x[ix:ix+mini_batch_size]
-            mini_batch_preds.append(torch.sigmoid(self.model(mini_batch)))
 
-        y_hat = torch.concatenate(mini_batch_preds)
+        y_hat = torch.sigmoid(self.model(x))
 
         non_nan_indices = [not torch.isnan(lesion_label) for lesion_label in y]
 

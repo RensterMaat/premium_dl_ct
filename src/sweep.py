@@ -7,7 +7,7 @@ sweep_config = {
     "method": "random",
     "metric": {"name": "valid_patient_auc", "goal": "maximize"},
     "parameters": {
-        "dim": {"values": [2, 3]},
+        "dim": {"values": [3]},
         "aggregation_function": {"values": ["min"]},
         "optimizer": {"values": ["adamw"]},  # , "sgd"]},
         "weight_decay": {"values": [0.0, 1e-9, 1e-7, 1e-5, 1e-3, 1e-1]},
@@ -39,12 +39,13 @@ sweep_config = {
         "roi_selection_method": {"values": ["crop"]},  # , "zoom"]},
         "roi_size": {"values": [50, 100, 150]},
         # "margin": {"values": [0, 10, 50]},
+        "n_forward_per_backwards": {"values":[1,2,4,8,16,32,64]},
         "sampler": {"values": [
-            "stratified", 
-            # "patient_grouped", 
-            # "vanilla"
+            "label_stratified", 
+            "label_organ_stratified",
+            "patient_grouped", 
+            "vanilla",
         ]},
-
     },
 }
 
