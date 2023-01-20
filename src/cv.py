@@ -11,7 +11,7 @@ def train():
     wandb.init()
     wandb.config.roi_selection_method = "crop"
     # wandb.config.dim = 2
-    wandb.config.size = 128 if wandb.config.dim == 3 else 256
+    wandb.config.size = 182# if wandb.config.dim == 3 else 256
     wandb.config.test_center = None  # "amphia"
     wandb.config.lesion_target = "lesion_response"
     wandb.config.patient_target = "response"
