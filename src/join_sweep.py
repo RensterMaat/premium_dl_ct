@@ -1,4 +1,4 @@
 import wandb
 from cv import train
 
-wandb.agent("cgsmexuq", function=train, project="sweep11")
+wandb.agent("lq38gvsl", function=train, project="sweep13")
