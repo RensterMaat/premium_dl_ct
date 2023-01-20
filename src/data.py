@@ -9,7 +9,7 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-from transforms import RandTranspose, RandMirror
+# from transforms import RandTranspose, RandMirror
 from monai.transforms import (
     Compose,
     LoadImaged,
@@ -17,6 +17,9 @@ from monai.transforms import (
     ToTensord,
     RandFlipd,
     RandRotate90d,
+    RandRotated, 
+    CenterSpatialCropd,
+    RandGaussianNoised,
 )
 
 
@@ -144,10 +147,19 @@ class DataModule(LightningDataModule):
             augmentation = Compose(
                 [
                     EnsureChannelFirstd(keys=["img"]),
-                    RandMirror(prob=0.5, spatial_axis=0),
-                    RandMirror(prob=0.5, spatial_axis=1),
-                    RandMirror(prob=0.5, spatial_axis=2),
-                    RandTranspose(),
+                    # RandMirror(prob=0.5, spatial_axis=0),
+                    # RandMirror(prob=0.5, spatial_axis=1),
+                    # RandMirror(prob=0.5, spatial_axis=2),
+                    # RandTranspose(),
+                    RandRotated(
+                        keys=['img'], 
+                        range_x=(0,2*np.pi), 
+                        range_y = (0,2*np.pi), 
+                        range_z=(0,2*np.pi), 
+                        prob=1
+                    ),
+                    CenterSpatialCropd(keys=['img'], roi_size=(128,128,128)),
+                    RandGaussianNoised(keys=['img'], prob=1, std=self.config.augmentation_noise_std),
                 ]
             )
         elif self.dim == 2:

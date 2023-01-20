@@ -20,35 +20,37 @@ sweep_config = {
                 # "efficientnet-b1",
                 # "efficientnet-b2",
                 "SEResNet50",
-                "SEResNet101",
-                "SEResNet152",
-                # 'SEResNext50',
+                # "SEResNet101",
+                # "SEResNet152",
+                # 'SERe[sNext50',
                 # 'SEResNext101'
             ]
         },
-        "dropout": {"min": 0.0, "max": 0.7},
+        "dropout": {'values': [0]},#{"min": 0.0, "max": 0.7},
         # "momentum": {"values": [0.0, 0.5, 0.9, 0.99]},
         "pretrained": {"values": [False]},  # , True]},
         "learning_rate_max": {
-            "min": -13.82,  # corresponds to 10e-6
-            "max": -9.210,
-            # "max": -6.908,  # corresponds to 10e-3
-            # "max": -4.605,  # corresponds to 10e-2
-            "distribution": "log_uniform",
+            'values':[1e-5]
+            # "min": -13.82,  # corresponds to 10e-6
+            # "max": -9.210,
+            # # "max": -6.908,  # corresponds to 10e-3
+            # # "max": -4.605,  # corresponds to 10e-2
+            # "distribution": "log_uniform",
         },
         "roi_selection_method": {"values": ["crop"]},  # , "zoom"]},
-        "roi_size": {"values": [50, 100, 150]},
+        "roi_size": {"values": [142]}, #50, 100, 150]},
         # "margin": {"values": [0, 10, 50]},
-        "n_forward_per_backwards": {"values":[1,2,4,8,16,32,64]},
+        "n_forward_per_backwards": {"values":[1]},#,2,4,8,16,32,64]},
         "sampler": {"values": [
-            "label_stratified", 
-            "label_organ_stratified",
-            "patient_grouped", 
+            # "label_stratified", 
+            # "label_organ_stratified",
+            # "patient_grouped", 
             "vanilla",
         ]},
+        'augmentation_noise_std':{'values':[0, 0.01, 0.001, 0.0001]}
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep12")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep14")
 
 wandb.agent(sweep_id, function=train)

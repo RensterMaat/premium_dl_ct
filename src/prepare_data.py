@@ -131,15 +131,15 @@ class DataPipeline:
 
 def main():
     CENTERS = [
-        # "amphia",
-        # "isala",
-        # "lumc",
-        # "maxima",
-        # "mst",
-        # "radboud",
-        # "umcu",
-        # "vumc",
-        # "zuyderland",
+        "amphia",
+        "isala",
+        "lumc",
+        "maxima",
+        "mst",
+        "radboud",
+        "umcu",
+        "vumc",
+        "zuyderland",
         'umcg'
     ]
 
@@ -148,9 +148,9 @@ def main():
     for center in CENTERS:
         input_folders.extend(
             [
-                # r / center / "monotherapy" / "split_segmentations",
-                # r / center / "combination_therapy" / "split_segmentations",
-                r / center / 'split_segmentations'
+                r / center / "monotherapy" / "split_segmentations",
+                r / center / "combination_therapy" / "split_segmentations",
+                # r / center / 'split_segmentations'
             ]
         )
 
@@ -190,50 +190,50 @@ def main():
     #     roi_size=50,
     # ).run()
 
+    # DataPipeline(
+    #     input_folders,
+    #     "/mnt/c/Users/user/data/dl_radiomics",
+    #     2,
+    #     256,
+    #     method="crop",
+    #     roi_size=100,
+    # ).run()
+
+    # DataPipeline(
+    #     input_folders,
+    #     "/mnt/c/Users/user/data/dl_radiomics",
+    #     2,
+    #     256,
+    #     method="crop",
+    #     roi_size=150,
+    # ).run()
+
     DataPipeline(
         input_folders,
         "/mnt/c/Users/user/data/dl_radiomics",
-        2,
-        256,
+        3,
+        int(np.ceil(128 * np.sqrt(2))),
         method="crop",
-        roi_size=100,
+        roi_size=int(np.ceil(50 * np.sqrt(2))),
     ).run()
 
     DataPipeline(
         input_folders,
         "/mnt/c/Users/user/data/dl_radiomics",
-        2,
-        256,
+        3,
+        int(np.ceil(128 * np.sqrt(2))),
         method="crop",
-        roi_size=150,
+        roi_size=int(np.ceil(100 * np.sqrt(2))),
     ).run()
 
-    # DataPipeline(
-    #     input_folders,
-    #     "/mnt/c/Users/user/data/dl_radiomics",
-    #     3,
-    #     int(np.ceil(128 * np.sqrt(2))),
-    #     method="crop",
-    #     roi_size=int(np.ceil(50 * np.sqrt(2))),
-    # ).run()
-
-    # DataPipeline(
-    #     input_folders,
-    #     "/mnt/c/Users/user/data/dl_radiomics",
-    #     3,
-    #     int(np.ceil(128 * np.sqrt(2))),
-    #     method="crop",
-    #     roi_size=int(np.ceil(100 * np.sqrt(2))),
-    # ).run()
-
-    # DataPipeline(
-    #     input_folders,
-    #     "/mnt/c/Users/user/data/dl_radiomics",
-    #     3,
-    #     int(np.ceil(128 * np.sqrt(2))),
-    #     method="crop",
-    #     roi_size=int(np.ceil(150 * np.sqrt(2))),
-    # ).run()
+    DataPipeline(
+        input_folders,
+        "/mnt/c/Users/user/data/dl_radiomics",
+        3,
+        int(np.ceil(128 * np.sqrt(2))),
+        method="crop",
+        roi_size=int(np.ceil(150 * np.sqrt(2))),
+    ).run()
 
 
 
