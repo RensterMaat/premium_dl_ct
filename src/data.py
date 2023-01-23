@@ -9,7 +9,7 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-# from transforms import RandTranspose, RandMirror
+from transforms import RandMirror
 from monai.transforms import (
     Compose,
     LoadImaged,
@@ -56,27 +56,27 @@ class DataModule(LightningDataModule):
                 *[self.data_dir_to_dict(self.root / c) for c in dev_centers]
             )
         )
+
         self.train_data, self.val_data = self.grouped_train_val_split(
-            dev_data, val_fraction=0.25
+            dev_data, fold=self.config.inner_fold
         )
 
         # test data
         if self.test_center:
             self.test_data = self.data_dir_to_dict(self.root / self.test_center)
 
-    def grouped_train_val_split(self, dev_data, val_fraction):
+    def grouped_train_val_split(self, dev_data, fold):
         all_patients = np.unique([x["patient"] for x in dev_data])
         random.shuffle(all_patients)
 
-        split_ix = int(len(all_patients) * (1 - val_fraction))
-        train_patients, val_patients = all_patients[:split_ix], all_patients[split_ix:]
+        patient_vs_fold = self.lesion_level_data.groupby('patient').fold.first()
 
         train_data = [
             x
             for x in dev_data
-            if x["patient"] in train_patients and not np.isnan(x["label"])
+            if patient_vs_fold[x["patient"]] != fold and not np.isnan(x["label"])
         ]
-        val_data = [x for x in dev_data if x["patient"] in val_patients]
+        val_data = [x for x in dev_data if patient_vs_fold[x["patient"]] == fold]
 
         return train_data, val_data
 
@@ -111,7 +111,7 @@ class DataModule(LightningDataModule):
             dataset,
             batch_sampler=batch_sampler,
             batch_size=self.config.max_batch_size if not batch_sampler else 1,
-            # num_workers=12,
+            num_workers=12,
         )
 
     def get_sampler(self, data, shuffle):
@@ -147,10 +147,7 @@ class DataModule(LightningDataModule):
             augmentation = Compose(
                 [
                     EnsureChannelFirstd(keys=["img"]),
-                    # RandMirror(prob=0.5, spatial_axis=0),
-                    # RandMirror(prob=0.5, spatial_axis=1),
-                    # RandMirror(prob=0.5, spatial_axis=2),
-                    # RandTranspose(),
+                    RandMirror(prob=0.5, spatial_axis=0),
                     RandRotated(
                         keys=['img'], 
                         range_x=(0,2*np.pi), 

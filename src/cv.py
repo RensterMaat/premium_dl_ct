@@ -29,31 +29,32 @@ def train():
         lesion_level_labels_csv,
         wandb.config,
     )
+    dm.setup()
 
-    model = Model(wandb.config)
+    # model = Model(wandb.config)
 
-    logger = WandbLogger(
-        name="hello7",
-        project="debugging",
-    )
+    # logger = WandbLogger(
+    #     name="hello7",
+    #     project="debugging",
+    # )
 
-    checkpoint_callback = ModelCheckpoint(monitor="valid_patient_auc", mode="max")
+    # checkpoint_callback = ModelCheckpoint(monitor="valid_patient_auc", mode="max")
 
-    early_stopping = EarlyStopping(
-        monitor="valid_patient_auc", mode="max", patience=wandb.config.patience
-    )
+    # early_stopping = EarlyStopping(
+    #     monitor="valid_patient_auc", mode="max", patience=wandb.config.patience
+    # )
 
-    trainer = Trainer(
-        max_epochs=wandb.config.max_epochs,
-        gpus=1,
-        # deterministic=True,
-        accumulate_grad_batches=4,
-        fast_dev_run=False,
-        logger=logger,
-        callbacks=[early_stopping, checkpoint_callback],
-    )
+    # trainer = Trainer(
+    #     max_epochs=wandb.config.max_epochs,
+    #     gpus=1,
+    #     # deterministic=True,
+    #     accumulate_grad_batches=4,
+    #     fast_dev_run=False,
+    #     logger=logger,
+    #     callbacks=[early_stopping, checkpoint_callback],
+    # )
 
-    trainer.fit(model, dm)
+    # trainer.fit(model, dm)
 
 
 if __name__ == "__main__":
