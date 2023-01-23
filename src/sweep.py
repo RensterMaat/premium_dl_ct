@@ -54,11 +54,23 @@ sweep_config = {
             # "patient_grouped", 
             "vanilla",
         ]},
+        'test_center': {'values': [
+            'umcu',
+            'maxima',
+            'amphia',
+            'isala',
+            'lumc',
+            'mst',
+            'vumc',
+            'zuyderland',
+            'radboud',
+            'umcg'
+        ]},
         'augmentation_noise_std':{'values':[0.001]},
         'inner_fold':{'values':[0,1,2,3,4]}
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep15")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep16")
 
 wandb.agent(sweep_id, function=train)
