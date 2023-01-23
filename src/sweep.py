@@ -4,13 +4,20 @@ from cv import train
 
 
 sweep_config = {
-    "method": "random",
+    "method": "grid",
     "metric": {"name": "valid_patient_auc", "goal": "maximize"},
     "parameters": {
         "dim": {"values": [3]},
         "aggregation_function": {"values": ["min"]},
         "optimizer": {"values": ["adamw"]},  # , "sgd"]},
-        "weight_decay": {"values": [0.0, 1e-9, 1e-7, 1e-5, 1e-3, 1e-1]},
+        "weight_decay": {"values": [
+            # 0.0, 
+            # 1e-9, 
+            1e-7, 
+            # 1e-5, 
+            # 1e-3, 
+            # 1e-1
+        ]},
         "model": {
             "values": [
                 # "densenet121",
@@ -47,10 +54,11 @@ sweep_config = {
             # "patient_grouped", 
             "vanilla",
         ]},
-        'augmentation_noise_std':{'values':[0, 0.01, 0.001, 0.0001]}
+        'augmentation_noise_std':{'values':[0.001]},
+        'inner_fold':{'values':[0,1,2,3,4]}
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep14")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep15")
 
 wandb.agent(sweep_id, function=train)
