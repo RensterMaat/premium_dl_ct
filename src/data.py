@@ -85,7 +85,7 @@ class DataModule(LightningDataModule):
             {
                 "img": str(lesion_path),
                 "label": self.lesion_level_data.loc[lesion_path.name, self.config.lesion_target],
-                "patient": lesion_path.name.split(".")[0][:-2],
+                "patient": lesion_path.name.split(".")[0][:-2].replace('abdomen','').replace('thorax','').replace('hals',''),
                 "organ": self.lesion_level_data.loc[lesion_path.name, 'organ']
             }
             for lesion_path in dir.iterdir()
