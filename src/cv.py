@@ -10,9 +10,7 @@ from config import radiomics_folder, lesion_level_labels_csv, mini_batch_size
 def train():
     wandb.init()
     wandb.config.roi_selection_method = "crop"
-    # wandb.config.dim = 2
     wandb.config.size = 182# if wandb.config.dim == 3 else 256
-    wandb.config.test_center = "amphia"
     wandb.config.lesion_target = "lesion_response"
     wandb.config.patient_target = "response"
     wandb.config.max_batch_size = 6 #if wandb.config.dim == 3 else 32
@@ -29,31 +27,35 @@ def train():
         lesion_level_labels_csv,
         wandb.config,
     )
+    dm.setup()
 
-    model = Model(wandb.config)
+    for x in dm.val_dataloader():
+        print(x['label'].shape)
 
-    logger = WandbLogger(
-        name="hello7",
-        project="debugging",
-    )
+    # model = Model(wandb.config)
 
-    checkpoint_callback = ModelCheckpoint(monitor="valid_patient_auc", mode="max")
+    # logger = WandbLogger(
+    #     name="hello7",
+    #     project="debugging",
+    # )
 
-    early_stopping = EarlyStopping(
-        monitor="valid_patient_auc", mode="max", patience=wandb.config.patience
-    )
+    # checkpoint_callback = ModelCheckpoint(monitor="valid_patient_auc", mode="max")
 
-    trainer = Trainer(
-        max_epochs=wandb.config.max_epochs,
-        gpus=1,
-        # deterministic=True,
-        accumulate_grad_batches=wandb.config.n_forward_per_backwards,
-        fast_dev_run=False,
-        logger=logger,
-        callbacks=[early_stopping, checkpoint_callback],
-    )
+    # early_stopping = EarlyStopping(
+    #     monitor="valid_patient_auc", mode="max", patience=wandb.config.patience
+    # )
 
-    trainer.fit(model, dm)
+    # trainer = Trainer(
+    #     max_epochs=wandb.config.max_epochs,
+    #     gpus=1,
+    #     # deterministic=True,
+    #     accumulate_grad_batches=wandb.config.n_forward_per_backwards,
+    #     fast_dev_run=False,
+    #     logger=logger,
+    #     callbacks=[early_stopping, checkpoint_callback],
+    # )
+
+    # trainer.fit(model, dm)
 
 
 if __name__ == "__main__":
@@ -63,7 +65,7 @@ if __name__ == "__main__":
     wandb.config.optimizer = "adamw"
     wandb.config.weight_decay = 1e-7
     wandb.config.model = "SEResNet50"
-    wandb.config.dropout = 0.07292136035956572
+    wandb.config.dropout = 0
     wandb.config.momentum = 0
     wandb.config.pretrained = False
     wandb.config.learning_rate_max = 1e-5
@@ -72,6 +74,7 @@ if __name__ == "__main__":
     wandb.config.n_forward_per_backwards = 1
     wandb.config.augmentation_noise_std = 0.001
     wandb.config.inner_fold = 0
+    wandb.config.test_center = 'lumc'
 
     train()
 
