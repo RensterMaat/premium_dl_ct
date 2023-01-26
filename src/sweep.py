@@ -71,6 +71,6 @@ sweep_config = {
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep16")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep19")
 
 wandb.agent(sweep_id, function=train)
