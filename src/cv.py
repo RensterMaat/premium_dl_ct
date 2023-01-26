@@ -12,7 +12,7 @@ def train():
     wandb.config.roi_selection_method = "crop"
     # wandb.config.dim = 2
     wandb.config.size = 182# if wandb.config.dim == 3 else 256
-    wandb.config.test_center = None  # "amphia"
+    wandb.config.test_center = "amphia"
     wandb.config.lesion_target = "lesion_response"
     wandb.config.patient_target = "response"
     wandb.config.max_batch_size = 6 #if wandb.config.dim == 3 else 32
@@ -47,7 +47,7 @@ def train():
         max_epochs=wandb.config.max_epochs,
         gpus=1,
         # deterministic=True,
-        accumulate_grad_batches=4,
+        accumulate_grad_batches=wandb.config.n_forward_per_backwards,
         fast_dev_run=False,
         logger=logger,
         callbacks=[early_stopping, checkpoint_callback],
@@ -59,16 +59,19 @@ def train():
 if __name__ == "__main__":
     wandb.init()
     wandb.config.aggregation_function = "min"
-    wandb.config.roi_size = 150
+    wandb.config.roi_size = 142
     wandb.config.optimizer = "adamw"
-    wandb.config.weight_decay = 0.00001
+    wandb.config.weight_decay = 1e-7
     wandb.config.model = "SEResNet50"
     wandb.config.dropout = 0.07292136035956572
     wandb.config.momentum = 0
     wandb.config.pretrained = False
-    wandb.config.learning_rate_max = 0.000023059510738335888
-    wandb.config.sampler = "label_organ_stratified"
+    wandb.config.learning_rate_max = 1e-5
+    wandb.config.sampler = "vanilla"
     wandb.config.dim = 3
+    wandb.config.n_forward_per_backwards = 1
+    wandb.config.augmentation_noise_std = 0.001
+    wandb.config.inner_fold = 0
 
     train()
 
