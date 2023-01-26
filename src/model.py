@@ -102,9 +102,9 @@ class Model(LightningModule):
         non_nan_indices = [not torch.isnan(lesion_label) for lesion_label in y]
 
         loss = nn.BCELoss()(
-            y_hat.squeeze()[non_nan_indices], y.float()[non_nan_indices]
+            y_hat.squeeze(-1)[non_nan_indices], y.float()[non_nan_indices]
         )
-        self.val_auc.update(y_hat.squeeze()[non_nan_indices], y.int()[non_nan_indices])
+        self.val_auc.update(y_hat.squeeze(-1)[non_nan_indices], y.int()[non_nan_indices])
 
         self.log_dict(
             {
