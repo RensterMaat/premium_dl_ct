@@ -47,22 +47,23 @@ class DataModule(LightningDataModule):
 
         self.centers = [c.name for c in self.root.iterdir()]
 
-    def setup(self, *args, **kwargs):
+    def setup(self, stage=None):
         dev_centers = [c for c in self.centers if not c == self.test_center]
 
         # development data
-        dev_data = list(
-            itertools.chain(
-                *[self.data_dir_to_dict(self.root / c) for c in dev_centers]
+        if stage == 'fit' or stage is None:
+            dev_data = list(
+                itertools.chain(
+                    *[self.data_dir_to_dict(self.root / c) for c in dev_centers]
+                )
             )
-        )
 
-        self.train_data, self.val_data = self.grouped_train_val_split(
-            dev_data, fold=self.config.inner_fold
-        )
+            self.train_data, self.val_data = self.grouped_train_val_split(
+                dev_data, fold=self.config.inner_fold
+            )
 
         # test data
-        if self.test_center:
+        if stage == 'test' and self.test_center:
             self.test_data = self.data_dir_to_dict(self.root / self.test_center)
 
     def grouped_train_val_split(self, dev_data, fold):
@@ -170,7 +171,7 @@ class DataModule(LightningDataModule):
         if augmented:
             return Compose([load, augmentation, ToTensord(keys=["img"])])
         else:
-            return Compose([load, ToTensord(keys=["img"])])
+            return Compose([load, EnsureChannelFirstd(keys=['img']), ToTensord(keys=["img"])])
 
 
 class StratifiedSampler(Sampler):
