@@ -23,6 +23,20 @@ from monai.transforms import (
 )
 
 
+CENTERS = [
+    'amphia',
+    'isala',
+    'lumc',
+    'maxima',
+    'mst',
+    'radboud',
+    'umcg',
+    'umcu',
+    'vumc',
+    'zuyderland'
+]
+
+
 class DataModule(LightningDataModule):
     def __init__(self, input_data_root, prediction_target_file_path, config):
         super().__init__()

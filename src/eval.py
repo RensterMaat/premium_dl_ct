@@ -8,11 +8,12 @@ from torch.nn import Module
 from monai.networks import nets
 from pathlib import Path
 from dataclasses import dataclass
-from data import DataModule
+from data import DataModule, CENTERS
 from config import radiomics_folder, lesion_level_labels_csv
 
-class TrainedModel(Module):
-    def __init__(self, checkpoint_file):
+
+class TrainedModel(pl.LightningModule):
+    def __init__(self, run_id, predictions_save_file_path, fold):
         super().__init__()
         self.model = nets.SEResNet50(
             spatial_dims=3,
@@ -20,12 +21,17 @@ class TrainedModel(Module):
             num_classes=1
         )
 
+        checkpoint_file = self.get_checkpoint_file(run_id)
+
         state_dict = torch.load(checkpoint_file)['state_dict']
         formatted_state_dict = self.format_state_dict(state_dict)
 
         self.model.load_state_dict(formatted_state_dict)
 
         self.model.eval()
+
+        self.predictions_save_file_path = Path(predictions_save_file_path)
+        self.predictions = pd.Series(name=f'fold_{fold}')
 
     def format_state_dict(self, state_dict):
         keys = list(state_dict.keys())
@@ -36,36 +42,27 @@ class TrainedModel(Module):
         return state_dict
 
     def forward(self, x):
-        return torch.sigmoid(self.model(x))
-
-
-class Ensemble(pl.LightningModule):
-    def __init__(self, run_ids, predictions_save_file_path):
-        super().__init__()
-        
-        self.ensemble = []
-        for run_id in run_ids:
-            checkpoint_file = self.get_checkpoint_file(run_id)
-            model = TrainedModel(checkpoint_file)
-            self.ensemble.append(model)
-
-        self.predictions_save_file_path = predictions_save_file_path
-        self.predictions = pd.DataFrame(columns=[f'fold_{f}' for f in range(5)])
-
-    def forward(self, x):
-        out = torch.stack([model(x).squeeze(-1) for model in self.ensemble], -1)
-        return out
+        return self.model(x)
 
     def test_step(self, batch, batch_idx):
         x = batch['img']
-        y_hat = self(x)
+        y_hat = torch.sigmoid(self(x)).cpu().detach().numpy().squeeze(-1)
+        filenames = batch['img_meta_dict']['filename_or_obj']
 
-        self.predictions.loc[
-            Path(y_hat.meta['filename_or_obj']).name
-        ] = y_hat.detach().numpy().squeeze()
+        for filename, prediction in zip(filenames, y_hat):
+            self.predictions.loc[Path(filename).name] = prediction
 
-    def test_epoch_end(self, results):
-        self.predictions.to_csv(self.predictions_save_file_path)
+    def test_epoch_end(self, *args, **kwargs):
+        if self.predictions_save_file_path.exists():
+            other_folds = pd.read_csv(self.predictions_save_file_path).set_index('Unnamed: 0')
+            combined_dataframe = other_folds.merge(
+                self.predictions.to_frame(),
+                left_index=True, 
+                right_index=True
+            )
+            combined_dataframe.to_csv(self.predictions_save_file_path)
+        else:
+            self.predictions.to_frame().to_csv(self.predictions_save_file_path)
 
     def get_checkpoint_file(self, run_id):
         checkpoint_root = Path('/mnt/hpc/rens/premium_dl_ct/src/debugging')
@@ -108,28 +105,28 @@ if __name__ == "__main__":
     
     save_folder = Path('/mnt/c/Users/user/data/results_dl')
     
-    test_center = 'radboud'
-    
-    (save_folder / test_center).mkdir(exist_ok=True)
+    for test_center in CENTERS:
+        (save_folder / test_center).mkdir(exist_ok=True)
 
-    run_ids = fold_vs_id[test_center]
+        run_ids = fold_vs_id[test_center]
 
-    e = Ensemble(run_ids, save_folder / test_center / 'dl_preds.csv')
+        for fold, run_id in enumerate(run_ids):
+            model = TrainedModel(run_id, save_folder / test_center / 'dl_preds.csv', fold)
 
-    mock_wandb_config = Config(
-        roi_selection_method='crop',
-        dim = 3,
-        size=182,
-        roi_size=142,
-        test_center=test_center,
-        max_batch_size=1,
-        inner_fold=0,
-        lesion_target='lesion_response',
-        sampler='vanilla',
-        augmentation_noise_std=0.001
-    )
+            mock_wandb_config = Config(
+                roi_selection_method='crop',
+                dim = 3,
+                size=182,
+                roi_size=142,
+                test_center=test_center,
+                max_batch_size=24,
+                inner_fold=0,
+                lesion_target='lesion_response',
+                sampler='vanilla',
+                augmentation_noise_std=0.001
+            )
 
-    dm = DataModule(radiomics_folder, lesion_level_labels_csv, mock_wandb_config)
+            dm = DataModule(radiomics_folder, lesion_level_labels_csv, mock_wandb_config)
 
-    trainer = Trainer(gpus=1)
-    trainer.test(e, dm)
+            trainer = Trainer(gpus=1)
+            trainer.test(model, dm)
