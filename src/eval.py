@@ -55,17 +55,16 @@ class TrainedModel(pl.LightningModule):
     def test_epoch_end(self, *args, **kwargs):
         if self.predictions_save_file_path.exists():
             other_folds = pd.read_csv(self.predictions_save_file_path).set_index('Unnamed: 0')
-            combined_dataframe = other_folds.merge(
+            combined_dataframe = other_folds.join(
                 self.predictions.to_frame(),
-                left_index=True, 
-                right_index=True
+                how='outer'
             )
             combined_dataframe.to_csv(self.predictions_save_file_path)
         else:
             self.predictions.to_frame().to_csv(self.predictions_save_file_path)
 
     def get_checkpoint_file(self, run_id):
-        checkpoint_root = Path('/mnt/hpc/rens/premium_dl_ct/src/debugging')
+        checkpoint_root = Path('/mnt/c/Users/user/data/models/debugging')
 
         checkpoint_folder = list(checkpoint_root.glob(f'{run_id}'))[0] / 'checkpoints'
         checkpoint_file = list(checkpoint_folder.glob('*.ckpt'))[0]
@@ -88,14 +87,16 @@ class Config:
 
 
 def get_fold_vs_run_ids(sweep_id):
-    r = Path('/mnt/hpc/rens/premium_dl_ct/src/wandb')
+    r = Path('/mnt/c/Users/user/data/models/wandb')
     sweep_folder = r / f'sweep-{sweep_id}'
 
     fold_vs_id = defaultdict(list)
     for config_file in sweep_folder.iterdir():
         with open(config_file, 'r') as stream:
             config = yaml.safe_load(stream)
-        fold_vs_id[config['test_center']['value']].append(config_file.stem.split('-')[-1])
+        fold_vs_id[config['test_center']['value']].append(
+            (config['inner_fold']['value'], config_file.stem.split('-')[-1])
+        )
 
     return fold_vs_id
 
@@ -104,29 +105,40 @@ if __name__ == "__main__":
     fold_vs_id = get_fold_vs_run_ids(sweep_id)
     
     save_folder = Path('/mnt/c/Users/user/data/results_dl')
+
+    trainer = Trainer(gpus=1)
+
+    mock_wandb_config = Config(
+        roi_selection_method='crop',
+        dim = 3,
+        size=182,
+        roi_size=142,
+        test_center=None,
+        max_batch_size=24,
+        inner_fold=None,
+        lesion_target='lesion_response',
+        sampler='vanilla',
+        augmentation_noise_std=0.001
+    )
     
     for test_center in CENTERS:
         (save_folder / test_center).mkdir(exist_ok=True)
 
-        run_ids = fold_vs_id[test_center]
+        for fold, run_id in fold_vs_id[test_center]:
+            mock_wandb_config.inner_fold = fold
+            mock_wandb_config.test_center = test_center
+            dm = DataModule(radiomics_folder, lesion_level_labels_csv, mock_wandb_config)
+            dm.setup()
 
-        for fold, run_id in enumerate(run_ids):
-            model = TrainedModel(run_id, save_folder / test_center / 'dl_preds.csv', fold)
-
-            mock_wandb_config = Config(
-                roi_selection_method='crop',
-                dim = 3,
-                size=182,
-                roi_size=142,
-                test_center=test_center,
-                max_batch_size=24,
-                inner_fold=0,
-                lesion_target='lesion_response',
-                sampler='vanilla',
-                augmentation_noise_std=0.001
+            # inference on validation fold for later recalibration and combination model
+            model = TrainedModel(
+                run_id, save_folder / test_center / 'dl_validation_preds.csv', 
+                fold
             )
 
-            dm = DataModule(radiomics_folder, lesion_level_labels_csv, mock_wandb_config)
+            trainer.test(model, dataloaders=dm.val_dataloader())
 
-            trainer = Trainer(gpus=1)
-            trainer.test(model, dm)
+            # inference on test set
+            # model.predictions_save_file_path = save_folder / test_center / 'dl_preds.csv'
+
+            # trainer.test(model, dataloaders=dm.test_dataloader())
