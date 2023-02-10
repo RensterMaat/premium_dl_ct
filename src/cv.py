@@ -70,8 +70,8 @@ if __name__ == "__main__":
     wandb.config.dim = 3
     wandb.config.n_forward_per_backwards = 1
     wandb.config.augmentation_noise_std = 0.001
-    wandb.config.inner_fold = 0
-    wandb.config.test_center = 'lumc'
+    wandb.config.inner_fold = 1
+    wandb.config.test_center = 'umcg'
 
     train()
 
