@@ -132,13 +132,13 @@ if __name__ == "__main__":
 
             # inference on validation fold for later recalibration and combination model
             model = TrainedModel(
-                run_id, save_folder / test_center / 'dl_validation_preds.csv', 
+                run_id, save_folder / test_center / 'dl_training_preds.csv', 
                 fold
             )
 
             trainer.test(model, dataloaders=dm.val_dataloader())
 
             # inference on test set
-            # model.predictions_save_file_path = save_folder / test_center / 'dl_preds.csv'
+            model.predictions_save_file_path = save_folder / test_center / 'dl_test_preds.csv'
 
-            # trainer.test(model, dataloaders=dm.test_dataloader())
+            trainer.test(model, dataloaders=dm.test_dataloader())
