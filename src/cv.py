@@ -11,8 +11,8 @@ def train():
     wandb.init()
     wandb.config.roi_selection_method = "crop"
     wandb.config.size = 182# if wandb.config.dim == 3 else 256
-    wandb.config.lesion_target = "lesion_response"
-    wandb.config.patient_target = "response"
+    wandb.config.lesion_target = "1yr_OS"
+    wandb.config.patient_target = "1yr_OS"
     wandb.config.max_batch_size = 6 #if wandb.config.dim == 3 else 32
     wandb.config.seed = 0
     wandb.config.max_epochs = 100
@@ -33,7 +33,7 @@ def train():
 
     logger = WandbLogger(
         name="hello7",
-        project="debugging",
+        project="survival",
     )
 
     checkpoint_callback = ModelCheckpoint(monitor="valid_patient_auc", mode="max")
