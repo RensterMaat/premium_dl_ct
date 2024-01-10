@@ -28,12 +28,15 @@ sweep_config = {
                 # "efficientnet-b0",
                 # "efficientnet-b1",
                 # "efficientnet-b2",
-                # "SEResNet50",
+                "SEResNet50",
                 # "SEResNet101",
                 # "SEResNet152",
                 # 'SEResNext50',
                 # 'SEResNext101',
-                "vit_b_16"
+                "vit_b_16",
+                "vit_b_32",
+                "vit_l_16",
+                "vit_l_32",
             ]
         },
         "dropout": {"values": [0]},  # {"min": 0.0, "max": 0.7},
