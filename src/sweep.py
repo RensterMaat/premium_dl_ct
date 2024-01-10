@@ -13,9 +13,9 @@ sweep_config = {
         "weight_decay": {
             "values": [
                 # 0.0,
-                # 1e-9,
+                1e-9,
                 1e-7,
-                # 1e-5,
+                1e-5,
                 # 1e-3,
                 # 1e-1
             ]
