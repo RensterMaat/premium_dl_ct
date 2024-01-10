@@ -9,7 +9,7 @@ from monai.data import CacheDataset
 from pytorch_lightning import LightningDataModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
-from src.transforms import RandMirror
+from transforms import RandMirror
 from monai.transforms import (
     Compose,
     LoadImaged,
@@ -17,23 +17,23 @@ from monai.transforms import (
     ToTensord,
     RandFlipd,
     RandRotate90d,
-    RandRotated, 
+    RandRotated,
     CenterSpatialCropd,
     RandGaussianNoised,
 )
 
 
 CENTERS = [
-    'amphia',
-    'isala',
-    'lumc',
-    'maxima',
-    'mst',
-    'radboud',
-    'umcg',
-    'umcu',
-    'vumc',
-    'zuyderland'
+    "amphia",
+    "isala",
+    "lumc",
+    "maxima",
+    "mst",
+    "radboud",
+    "umcg",
+    "umcu",
+    "vumc",
+    "zuyderland",
 ]
 
 
@@ -46,9 +46,9 @@ class DataModule(LightningDataModule):
             folder_name = f"dim-{config.dim}_size-{config.size}_method-{config.roi_selection_method}_margin-{config.margin}"
         self.root = Path(input_data_root) / folder_name
 
-        self.lesion_level_data = pd.read_csv(prediction_target_file_path, sep=";").set_index(
-            "lesion"
-        )
+        self.lesion_level_data = pd.read_csv(
+            prediction_target_file_path, sep=";"
+        ).set_index("lesion")
         self.test_center = config.test_center
         self.max_batch_size = config.max_batch_size
         self.dim = config.dim
@@ -65,7 +65,7 @@ class DataModule(LightningDataModule):
         dev_centers = [c for c in self.centers if not c == self.test_center]
 
         # development data
-        if stage == 'fit' or stage is None:
+        if stage == "fit" or stage is None:
             dev_data = list(
                 itertools.chain(
                     *[self.data_dir_to_dict(self.root / c) for c in dev_centers]
@@ -77,14 +77,14 @@ class DataModule(LightningDataModule):
             )
 
         # test data
-        if stage == 'test' and self.test_center:
+        if stage == "test" and self.test_center:
             self.test_data = self.data_dir_to_dict(self.root / self.test_center)
 
     def grouped_train_val_split(self, dev_data, fold):
         all_patients = np.unique([x["patient"] for x in dev_data])
         random.shuffle(all_patients)
 
-        patient_vs_fold = self.lesion_level_data.groupby('patient').fold.first()
+        patient_vs_fold = self.lesion_level_data.groupby("patient").fold.first()
 
         train_data = [
             x
@@ -99,9 +99,14 @@ class DataModule(LightningDataModule):
         return [
             {
                 "img": str(lesion_path),
-                "label": self.lesion_level_data.loc[lesion_path.name, self.config.lesion_target],
-                "patient": lesion_path.name.split(".")[0][:-2].replace('abdomen','').replace('thorax','').replace('hals',''),
-                "organ": self.lesion_level_data.loc[lesion_path.name, 'organ']
+                "label": self.lesion_level_data.loc[
+                    lesion_path.name, self.config.lesion_target
+                ],
+                "patient": lesion_path.name.split(".")[0][:-2]
+                .replace("abdomen", "")
+                .replace("thorax", "")
+                .replace("hals", ""),
+                "organ": self.lesion_level_data.loc[lesion_path.name, "organ"],
             }
             for lesion_path in dir.iterdir()
             if lesion_path.name in self.lesion_level_data.index
@@ -164,14 +169,16 @@ class DataModule(LightningDataModule):
                     EnsureChannelFirstd(keys=["img"]),
                     RandMirror(prob=0.5, spatial_axis=0),
                     RandRotated(
-                        keys=['img'], 
-                        range_x=(0,2*np.pi), 
-                        range_y = (0,2*np.pi), 
-                        range_z=(0,2*np.pi), 
-                        prob=1
+                        keys=["img"],
+                        range_x=(0, 2 * np.pi),
+                        range_y=(0, 2 * np.pi),
+                        range_z=(0, 2 * np.pi),
+                        prob=1,
                     ),
-                    CenterSpatialCropd(keys=['img'], roi_size=(128,128,128)),
-                    RandGaussianNoised(keys=['img'], prob=1, std=self.config.augmentation_noise_std),
+                    CenterSpatialCropd(keys=["img"], roi_size=(128, 128, 128)),
+                    RandGaussianNoised(
+                        keys=["img"], prob=1, std=self.config.augmentation_noise_std
+                    ),
                 ]
             )
         elif self.dim == 2:
@@ -185,12 +192,14 @@ class DataModule(LightningDataModule):
         if augmented:
             return Compose([load, augmentation, ToTensord(keys=["img"])])
         else:
-            return Compose([load, EnsureChannelFirstd(keys=['img']), ToTensord(keys=["img"])])
+            return Compose(
+                [load, EnsureChannelFirstd(keys=["img"]), ToTensord(keys=["img"])]
+            )
 
 
 class StratifiedSampler(Sampler):
     def __init__(self, groups, batch_size, shuffle=False):
-        self.groups = np.array(['_'.join([str(el) for el in x]) for x in groups])
+        self.groups = np.array(["_".join([str(el) for el in x]) for x in groups])
         self.batch_size = batch_size
         self.shuffle = shuffle
 

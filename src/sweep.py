@@ -4,7 +4,7 @@ from cv import train
 
 
 sweep_config = {
-    "method": "grid",
+    "method": "random",
     "metric": {"name": "valid_patient_auc", "goal": "maximize"},
     "parameters": {
         "dim": {"values": [3]},
@@ -28,16 +28,17 @@ sweep_config = {
                 # "efficientnet-b0",
                 # "efficientnet-b1",
                 # "efficientnet-b2",
-                "SEResNet50",
+                # "SEResNet50",
                 # "SEResNet101",
                 # "SEResNet152",
-                # 'SERe[sNext50',
-                # 'SEResNext101'
+                # 'SEResNext50',
+                # 'SEResNext101',
+                "vit_b_16"
             ]
         },
         "dropout": {"values": [0]},  # {"min": 0.0, "max": 0.7},
         # "momentum": {"values": [0.0, 0.5, 0.9, 0.99]},
-        "pretrained": {"values": [False]},  # , True]},
+        "pretrained": {"values": [False]},
         "learning_rate_max": {
             "values": [1e-5]
             # "min": -13.82,  # corresponds to 10e-6
@@ -77,6 +78,6 @@ sweep_config = {
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep22")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep25")
 
 wandb.agent(sweep_id, function=train)

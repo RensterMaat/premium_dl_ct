@@ -7,6 +7,7 @@ from monai.networks import nets
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import WandbLogger
 from torchmetrics.classification import Accuracy, BinaryAUROC
+from vit_pytorch.vit_3d import ViT
 from config import lesion_level_labels_csv, dmtr_csv
 
 
@@ -104,7 +105,9 @@ class Model(LightningModule):
         loss = nn.BCELoss()(
             y_hat.squeeze(-1)[non_nan_indices], y.float()[non_nan_indices]
         )
-        self.val_auc.update(y_hat.squeeze(-1)[non_nan_indices], y.int()[non_nan_indices])
+        self.val_auc.update(
+            y_hat.squeeze(-1)[non_nan_indices], y.int()[non_nan_indices]
+        )
 
         self.log_dict(
             {
@@ -150,9 +153,9 @@ class Model(LightningModule):
         elif self.config.model == "SEResNet50":
             architecture = nets.SEResNet50
         elif self.config.model == "SEResNet101":
-            architecture = nets.SEResNet50
+            architecture = nets.SEResNet101
         elif self.config.model == "SEResNet152":
-            architecture = nets.SEResNet50
+            architecture = nets.SEResNet152
         elif self.config.model == "SEResNext50":
             architecture = nets.SEResNext50
         elif self.config.model == "SEResNext101":
@@ -164,6 +167,34 @@ class Model(LightningModule):
                 in_channels=3 if self.config.dim == 2 else 1,
                 num_classes=1,
                 pretrained=self.config.pretrained,
+            )
+        elif self.config.model.startswith("vit"):
+            size = self.config.model.split("_")[1]  # b or l
+            patch_size = self.config.model.split("_")[2]  # 16 or 32
+
+            if size == "b":
+                depth = 12
+                heads = 12
+                dim = 768
+                mlp_dim = 3072
+            elif size == "l":
+                depth = 24
+                heads = 16
+                dim = 1024
+                mlp_dim = 4096
+
+            self.model = ViT(
+                image_size=128,
+                frames=128,
+                image_patch_size=patch_size,
+                frame_patch_size=patch_size,
+                num_classes=1,
+                channels=1,
+                depth=depth,
+                heads=heads,
+                dim=dim,
+                mlp_dim=mlp_dim,
+                dropout=self.config.dropout,
             )
 
         if self.config.model.startswith("densenet"):
