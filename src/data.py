@@ -91,6 +91,14 @@ class DataModule(LightningDataModule):
             for x in dev_data
             if patient_vs_fold[x["patient"]] != fold and not np.isnan(x["label"])
         ]
+        # train_data = []
+        # for x in dev_data:
+        #     print(x)
+        #     print(patient_vs_fold[x["patient"]], x["label"])
+        #     print()
+        #     if patient_vs_fold[x["patient"]] != fold and not np.isnan(x["label"]):
+        #         train_data.append(x)
+
         val_data = [x for x in dev_data if patient_vs_fold[x["patient"]] == fold]
 
         return train_data, val_data

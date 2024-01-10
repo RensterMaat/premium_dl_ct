@@ -7,6 +7,8 @@ sweep_config = {
     "method": "random",
     "metric": {"name": "valid_patient_auc", "goal": "maximize"},
     "parameters": {
+        'lesion_target': {'values': ["lesion_response"]},
+        'patient_target': {'values': ["response"]},
         "dim": {"values": [3]},
         "aggregation_function": {"values": ["min"]},
         "optimizer": {"values": ["adamw"]},  # , "sgd"]},

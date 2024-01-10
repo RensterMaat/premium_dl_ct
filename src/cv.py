@@ -32,7 +32,7 @@ def train():
 
     logger = WandbLogger(
         name="hello7",
-        project="survival",
+        project="benefit",
     )
 
     checkpoint_callback = ModelCheckpoint(monitor="valid_patient_auc", mode="max")

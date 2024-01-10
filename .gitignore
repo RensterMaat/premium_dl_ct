@@ -12,4 +12,5 @@ survival
 *.ckpt
 ..bfg-report
 scripts/format_dmtr.ipynb
-tables
+survival
+benefittables
