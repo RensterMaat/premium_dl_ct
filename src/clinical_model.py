@@ -16,10 +16,11 @@ class ClinicalModel:
         ])
         self.grid_search = GridSearchCV(
             self.model,
-            {'lr__C': np.logspace(-4,4,10)},
+            {'lr__C': np.logspace(-4,1,10)},
             scoring='roc_auc',
             n_jobs=1
         )
+
         self.predictions_save_folder = predictions_save_folder
 
     def fit(self, X, y):
@@ -49,17 +50,21 @@ class ClinicalModel:
 if __name__ == "__main__":
     clinical_predictors = pd.read_csv('/mnt/c/Users/user/data/tables/clinical_predictors.csv').set_index('id')
 
-    save_folder = Path('/mnt/c/Users/user/data/results_dl')
+    target ='response'
+    save_folder = Path('/mnt/c/Users/user/data/results_dl_response')
     model = ClinicalModel(None)
 
     for center in CENTERS:
         model.predictions_save_folder = save_folder / center
 
+        if not model.predictions_save_folder.exists():   
+            model.predictions_save_folder.mkdir()
+
         train = clinical_predictors[clinical_predictors.center != center]
-        X_train = train.drop(columns=['center','response'])
-        y_train = train.response
+        X_train = train.drop(columns=['center','response','dcb'])
+        y_train = train[target]
         model.fit(X_train, y_train)
 
         test = clinical_predictors[clinical_predictors.center == center]
-        X_test = test.drop(columns=['center','response'])
+        X_test = test.drop(columns=['center','response','dcb'])
         model.predict_proba(X_test)

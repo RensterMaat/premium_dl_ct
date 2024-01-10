@@ -8,6 +8,8 @@ project_skeleton_on_lung_lesions
 src/config.py
 *.pyc
 debugging
+survival
 *.ckpt
 ..bfg-report
 scripts/format_dmtr.ipynb
+tables

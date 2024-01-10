@@ -6,7 +6,7 @@ from sklearn.metrics import roc_auc_score, roc_curve
 from skmisc.loess import loess
 
 
-def plot_roc(predictor, target, data, ax):
+def plot_roc(predictor, target, data, ax, aggregated_auc=None):
     tprs = []
     aucs = []
     n = []
@@ -17,7 +17,10 @@ def plot_roc(predictor, target, data, ax):
         auc = roc_auc_score(subset[target], subset[predictor])
         aucs.append(auc)
         fpr, tpr, _ = roc_curve(subset[target], subset[predictor])
-        ax.plot(fpr, tpr, c='gray', lw=1, label=f'{center} -- {auc:.3f}')
+        if aggregated_auc is None:
+            ax.plot(fpr, tpr, c='gray', lw=1, label=f'{center} -- {auc:.3f}')
+        else:
+            ax.plot(fpr, tpr, c='gray', lw=1)
 
         interp_tpr = np.interp(mean_fpr, fpr, tpr)
         tprs.append(interp_tpr)
@@ -34,8 +37,12 @@ def plot_roc(predictor, target, data, ax):
     ax.set_xlabel('1 - specificity')
     ax.set_ylabel('Sensitivity')
 
-    ax.plot(mean_fpr, mean_tpr, c='b', lw=3, label=f'Mean -- {np.average(aucs, weights=n):.3f}')
-    ax.legend()
+    if aggregated_auc is None:
+        ax.plot(mean_fpr, mean_tpr, c='b', lw=3, label=f'Mean -- {np.average(aucs, weights=n):.3f}')
+    else:
+        ax.plot(mean_fpr, mean_tpr, c='b', lw=3, label=f'AUC = {aggregated_auc[0]:.3f} [95% CI {aggregated_auc[1]:.3f}-{aggregated_auc[2]:.3f}]')
+    
+    ax.legend(loc='lower right')
 
 def plot_calibration_curve(predictor, target, data, ax):
 

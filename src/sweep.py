@@ -10,14 +10,16 @@ sweep_config = {
         "dim": {"values": [3]},
         "aggregation_function": {"values": ["min"]},
         "optimizer": {"values": ["adamw"]},  # , "sgd"]},
-        "weight_decay": {"values": [
-            # 0.0, 
-            # 1e-9, 
-            1e-7, 
-            # 1e-5, 
-            # 1e-3, 
-            # 1e-1
-        ]},
+        "weight_decay": {
+            "values": [
+                # 0.0,
+                # 1e-9,
+                1e-7,
+                # 1e-5,
+                # 1e-3,
+                # 1e-1
+            ]
+        },
         "model": {
             "values": [
                 # "densenet121",
@@ -33,11 +35,11 @@ sweep_config = {
                 # 'SEResNext101'
             ]
         },
-        "dropout": {'values': [0]},#{"min": 0.0, "max": 0.7},
+        "dropout": {"values": [0]},  # {"min": 0.0, "max": 0.7},
         # "momentum": {"values": [0.0, 0.5, 0.9, 0.99]},
         "pretrained": {"values": [False]},  # , True]},
         "learning_rate_max": {
-            'values':[1e-5]
+            "values": [1e-5]
             # "min": -13.82,  # corresponds to 10e-6
             # "max": -9.210,
             # # "max": -6.908,  # corresponds to 10e-3
@@ -45,32 +47,36 @@ sweep_config = {
             # "distribution": "log_uniform",
         },
         "roi_selection_method": {"values": ["crop"]},  # , "zoom"]},
-        "roi_size": {"values": [142]}, #50, 100, 150]},
+        "roi_size": {"values": [142]},  # 50, 100, 150]},
         # "margin": {"values": [0, 10, 50]},
-        "n_forward_per_backwards": {"values":[1]},#,2,4,8,16,32,64]},
-        "sampler": {"values": [
-            # "label_stratified", 
-            # "label_organ_stratified",
-            # "patient_grouped", 
-            "vanilla",
-        ]},
-        'test_center': {'values': [
-            'umcu',
-            'maxima',
-            'amphia',
-            'isala',
-            'lumc',
-            'mst',
-            'vumc',
-            'zuyderland',
-            'radboud',
-            'umcg'
-        ]},
-        'augmentation_noise_std':{'values':[0.001]},
-        'inner_fold':{'values':[0,1,2,3,4]}
+        "n_forward_per_backwards": {"values": [1]},  # ,2,4,8,16,32,64]},
+        "sampler": {
+            "values": [
+                # "label_stratified",
+                # "label_organ_stratified",
+                # "patient_grouped",
+                "vanilla",
+            ]
+        },
+        "test_center": {
+            "values": [
+                "umcu",
+                "maxima",
+                "amphia",
+                "isala",
+                "lumc",
+                "mst",
+                "vumc",
+                "zuyderland",
+                "radboud",
+                "umcg",
+            ]
+        },
+        "augmentation_noise_std": {"values": [0.001]},
+        "inner_fold": {"values": [0, 1, 2, 3, 4]},
     },
 }
 
-sweep_id = wandb.sweep(sweep=sweep_config, project="sweep21")
+sweep_id = wandb.sweep(sweep=sweep_config, project="sweep22")
 
 wandb.agent(sweep_id, function=train)

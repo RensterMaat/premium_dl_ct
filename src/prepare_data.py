@@ -136,11 +136,11 @@ def main():
         # "lumc",
         # "maxima",
         # "mst",
-        # "radboud",
+        "radboud",
         # "umcu",
         # "vumc",
         # "zuyderland",
-        'umcg'
+        # 'umcg'
     ]
 
     r = Path("/mnt/d/premium_data")
@@ -148,9 +148,9 @@ def main():
     for center in CENTERS:
         input_folders.extend(
             [
-                r / center / "monotherapy" / "split_segmentations",
-                r / center / "combination_therapy" / "split_segmentations",
-                # r / center / 'split_segmentations'
+                # r / center / "monotherapy" / "split_segmentations",
+                # r / center / "combination_therapy" / "split_segmentations",
+                r / center / 'completed_apr2023' / 'split_segmentations'
             ]
         )
 
