@@ -170,7 +170,7 @@ class Model(LightningModule):
             )
         elif self.config.model.startswith("vit"):
             size = self.config.model.split("_")[1]  # b or l
-            patch_size = self.config.model.split("_")[2]  # 16 or 32
+            patch_size = int(self.config.model.split("_")[2])  # 16 or 32
 
             if size == "b":
                 depth = 12

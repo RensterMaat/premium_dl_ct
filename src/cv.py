@@ -12,7 +12,7 @@ def train():
     wandb.config.roi_selection_method = "crop"
     wandb.config.size = 182  # if wandb.config.dim == 3 else 256
     wandb.config.lesion_target = "lesion_response"
-    wandb.config.patient_target = "response"
+    wandb.config.patient_target = "orr"
     wandb.config.max_batch_size = 6  # if wandb.config.dim == 3 else 32
     wandb.config.seed = 0
     wandb.config.max_epochs = 100
